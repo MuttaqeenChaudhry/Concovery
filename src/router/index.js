@@ -51,11 +51,6 @@ const router = createRouter({
       name: "Exercises",
       component: ExercisePage,
     },
-    {
-      path: "/exercises",
-      name: "Exercises",
-      component: ExercisePage,
-    },
   ],
 });
 
