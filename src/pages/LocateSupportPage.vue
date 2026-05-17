@@ -23,11 +23,11 @@ const originLocation          = ref(null)
 const selectedSuggestionIndex = ref(null)
 const mapDiv                  = ref(null)
 
-// ─── Mapbox internals (non-reactive, no need to be refs) ──────────────────────
+// ─── Mapbox internals (plain variables — not reactive) ────────────────────────
 let map     = null
-let markers = [] // stores { marker, popup, el } for each pin
+let markers = []  // each entry: { marker, popup, el, lngLat, spreadLngLat, color, index }
 
-// ─── Color map for each clinic type ───────────────────────────────────────────
+// ─── Colour per clinic type ───────────────────────────────────────────────────
 const MARKER_COLORS = {
   'GP':              '#007aff',
   'Sports Medicine': '#34c759',
@@ -35,19 +35,101 @@ const MARKER_COLORS = {
   'Physiotherapy':   '#ff9500',
 }
 
-// ─── Initialise (or fly) the Mapbox map ───────────────────────────────────────
+// ─── Build the SVG for a pin ──────────────────────────────────────────────────
+// `active` = true → blue pin, larger size, glowing shadow
+const makePinSVG = (label, color, active = false) => {
+  const w  = active ? 48 : 36
+  const h  = active ? 58 : 44
+  const r  = active ? 14 : 10
+  const fs = active ? 15 : 13
+  const fill   = active ? '#007aff' : color
+  const shadow = active
+    ? 'drop-shadow(0 4px 12px rgba(0,122,255,0.60))'
+    : 'drop-shadow(0 2px 4px rgba(0,0,0,0.30))'
+  // The teardrop path scales with the pin size
+  const half = w / 2
+  return `
+    <svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"
+         xmlns="http://www.w3.org/2000/svg"
+         style="filter:${shadow};display:block;">
+      <path d="M${half} 0C${w*0.224} 0 0 ${w*0.224} 0 ${half}
+               c0 ${w*0.333} ${half} ${h-half} ${half} ${h-half}
+               S${w} ${half+w*0.333} ${w} ${half} C${w} ${w*0.224} ${w*0.776} 0 ${half} 0z"
+            fill="${fill}"
+            ${active ? `stroke="white" stroke-width="2.5"` : ''}/>
+      <circle cx="${half}" cy="${half}" r="${r}" fill="rgba(255,255,255,${active ? 0.35 : 0.25})"/>
+      <text x="${half}" y="${half + fs*0.4}"
+            text-anchor="middle" fill="white"
+            font-family="system-ui,-apple-system,sans-serif"
+            font-size="${fs}" font-weight="700">${label}</text>
+    </svg>`
+}
+
+// ─── Spread markers that are geographically too close ─────────────────────────
+//
+// When several clinics share the same building (like 4 entries at 255 Clayton Rd)
+// they all land on the exact same pixel and hide each other.
+// We detect such groups and fan them out in a small circle so every pin is
+// individually visible and clickable — similar to how Google Maps "spiders" pins.
+//
+const spreadOverlappingMarkers = () => {
+  const CLUSTER_THRESHOLD = 0.0003   // degrees — ~30 metres; markers closer than this get spread
+  const SPREAD_RADIUS     = 0.00045  // degrees — ~45 metres; radius of the fan-out circle
+
+  const assigned = new Set()
+  const groups   = []
+
+  liveSuggestions.value.forEach((place, i) => {
+    if (assigned.has(i)) return
+
+    const group = [i]
+    assigned.add(i)
+
+    // Find all other markers within the threshold of this one
+    liveSuggestions.value.forEach((other, j) => {
+      if (i === j || assigned.has(j)) return
+      const nearLat = Math.abs(parseFloat(place.lat) - parseFloat(other.lat)) < CLUSTER_THRESHOLD
+      const nearLng = Math.abs(parseFloat(place.lng) - parseFloat(other.lng)) < CLUSTER_THRESHOLD
+      if (nearLat && nearLng) { group.push(j); assigned.add(j) }
+    })
+
+    groups.push(group)
+  })
+
+  groups.forEach(group => {
+    if (group.length === 1) return  // solo marker — nothing to spread
+
+    // Centre of the cluster
+    const centerLat = group.reduce((s, i) => s + parseFloat(liveSuggestions.value[i].lat), 0) / group.length
+    const centerLng = group.reduce((s, i) => s + parseFloat(liveSuggestions.value[i].lng), 0) / group.length
+
+    // Arrange each marker in the group evenly around the centre, starting from top
+    group.forEach((placeIndex, pos) => {
+      const angle  = (2 * Math.PI * pos) / group.length - Math.PI / 2
+      const newLat = centerLat + SPREAD_RADIUS * Math.cos(angle)
+      // Longitude degrees shrink as you move away from the equator, so compensate
+      const newLng = centerLng + (SPREAD_RADIUS * Math.sin(angle)) / Math.cos(centerLat * Math.PI / 180)
+
+      markers[placeIndex].marker.setLngLat([newLng, newLat])
+      // Remember the new position so flyTo targets it correctly
+      markers[placeIndex].spreadLngLat = [newLng, newLat]
+    })
+  })
+}
+
+// ─── Initialise (or fly) the Mapbox map ──────────────────────────────────────
 const initMap = async (lat, lng) => {
   mapboxgl.accessToken = MapboxToken
   await nextTick()
   if (!mapDiv.value) return
 
-  // Map already created — just fly to the new location
+  // Already created — just reposition
   if (map) {
     map.flyTo({ center: [lng, lat], zoom: 14, speed: 1.4 })
-    const src = map.getSource('user-location')
-    if (src) {
-      src.setData({ type: 'Feature', geometry: { type: 'Point', coordinates: [lng, lat] } })
-    }
+    map.getSource('user-location')?.setData({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [lng, lat] },
+    })
     return
   }
 
@@ -58,44 +140,35 @@ const initMap = async (lat, lng) => {
     center:    [lng, lat],
     zoom:      13,
   })
-
   map.addControl(new mapboxgl.NavigationControl(), 'top-right')
   map.addControl(new mapboxgl.ScaleControl(), 'bottom-left')
 
-  // Animated pulsing dot to show the user's position
-  const DOT_SIZE = 120
+  // Animated pulsing dot for the user's own position
+  const DOT = 120
   const pulsingDot = {
-    width: DOT_SIZE, height: DOT_SIZE, data: new Uint8Array(DOT_SIZE * DOT_SIZE * 4),
-
+    width: DOT, height: DOT, data: new Uint8Array(DOT * DOT * 4),
     onAdd() {
-      const canvas = document.createElement('canvas')
-      canvas.width = canvas.height = DOT_SIZE
-      this.context = canvas.getContext('2d')
+      const c = document.createElement('canvas')
+      c.width = c.height = DOT
+      this.context = c.getContext('2d')
     },
-
     render() {
-      const t   = (performance.now() % 1200) / 1200  // 0 → 1 loop
-      const r   = (DOT_SIZE / 2) * 0.3
+      const t   = (performance.now() % 1200) / 1200
+      const r   = (DOT / 2) * 0.3
       const ctx = this.context
-
-      ctx.clearRect(0, 0, DOT_SIZE, DOT_SIZE)
-
-      // Outer fading ring
+      ctx.clearRect(0, 0, DOT, DOT)
       ctx.beginPath()
-      ctx.arc(DOT_SIZE / 2, DOT_SIZE / 2, r * (1 + t * 1.4), 0, Math.PI * 2)
+      ctx.arc(DOT / 2, DOT / 2, r * (1 + t * 1.4), 0, Math.PI * 2)
       ctx.fillStyle = `rgba(0,122,255,${0.4 * (1 - t)})`
       ctx.fill()
-
-      // Solid centre dot
       ctx.beginPath()
-      ctx.arc(DOT_SIZE / 2, DOT_SIZE / 2, r, 0, Math.PI * 2)
+      ctx.arc(DOT / 2, DOT / 2, r, 0, Math.PI * 2)
       ctx.fillStyle   = '#007aff'
       ctx.strokeStyle = 'white'
       ctx.lineWidth   = 3
       ctx.fill()
       ctx.stroke()
-
-      this.data = ctx.getImageData(0, 0, DOT_SIZE, DOT_SIZE).data
+      this.data = ctx.getImageData(0, 0, DOT, DOT).data
       map.triggerRepaint()
       return true
     },
@@ -103,60 +176,37 @@ const initMap = async (lat, lng) => {
 
   map.on('load', () => {
     map.addImage('pulsing-dot', pulsingDot, { pixelRatio: 2 })
-
     map.addSource('user-location', {
       type: 'geojson',
       data: { type: 'Feature', geometry: { type: 'Point', coordinates: [lng, lat] } },
     })
     map.addLayer({
-      id:     'user-location-layer',
-      type:   'symbol',
-      source: 'user-location',
+      id: 'user-location-layer', type: 'symbol', source: 'user-location',
       layout: { 'icon-image': 'pulsing-dot', 'icon-allow-overlap': true },
     })
-
-    // If suggestions arrived before the map finished loading, draw them now
     if (liveSuggestions.value?.length) renderMarkers()
   })
 }
 
-// ─── Draw numbered pin markers for every nearby place ─────────────────────────
-//
-// KEY FIX: mapboxgl.Marker is a DOM overlay — it does NOT depend on the map
-// style being loaded. We can call addTo(map) at any time safely.
-// The old code used map.once('load', ...) which never fires after the first load.
-//
+// ─── Draw all result pins on the map ─────────────────────────────────────────
 const renderMarkers = () => {
-  // Remove every existing marker and its popup first
   markers.forEach(({ marker, popup }) => { popup.remove(); marker.remove() })
   markers = []
 
   if (!map || !liveSuggestions.value?.length) return
 
   liveSuggestions.value.forEach((place, index) => {
-    const color = MARKER_COLORS[place.locationType] || '#007aff'
+    const color  = MARKER_COLORS[place.locationType] || '#007aff'
+    const lngLat = [parseFloat(place.lng), parseFloat(place.lat)]
 
-    // ── Build the teardrop pin element ──────────────────────────────────────
-    // No SVG filter IDs here — they collide in the DOM when renderMarkers
-    // is called more than once. A simple drop-shadow CSS filter is fine.
     const el = document.createElement('div')
     el.className = 'map-pin'
-    el.innerHTML = `
-      <svg width="36" height="44" viewBox="0 0 36 44" xmlns="http://www.w3.org/2000/svg"
-           style="filter:drop-shadow(0 2px 4px rgba(0,0,0,0.30));display:block;">
-        <path d="M18 0C8.06 0 0 8.06 0 18c0 12 18 26 18 26S36 30 36 18C36 8.06 27.94 0 18 0z"
-              fill="${color}"/>
-        <circle cx="18" cy="18" r="10" fill="rgba(255,255,255,0.25)"/>
-        <text x="18" y="23" text-anchor="middle" fill="white"
-              font-family="system-ui,-apple-system,sans-serif"
-              font-size="13" font-weight="700">${index + 1}</text>
-      </svg>`
+    el.innerHTML = makePinSVG(index + 1, color, false)
 
-    // ── Hover popup ─────────────────────────────────────────────────────────
     const popup = new mapboxgl.Popup({
       closeButton:  false,
       closeOnClick: false,
-      offset:       [0, -50],
+      offset:       [0, -56],
       className:    'concovery-popup',
     }).setHTML(`
       <div style="background:white;border:1px solid #e5e7eb;border-radius:12px;
@@ -172,41 +222,54 @@ const renderMarkers = () => {
         <div style="color:#6b7280;font-size:11px;">${place.distance || ''}</div>
       </div>`)
 
-    // Show popup on hover, hide when mouse leaves (unless this card is selected)
     el.addEventListener('mouseenter', () => popup.addTo(map))
     el.addEventListener('mouseleave', () => {
       if (selectedSuggestionIndex.value !== index) popup.remove()
     })
 
-    // Place the marker on the map — anchor bottom so the pin tip sits on coords
     const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
-      .setLngLat([parseFloat(place.lng), parseFloat(place.lat)])
+      .setLngLat(lngLat)
       .addTo(map)
 
-    markers.push({ marker, popup, el })
+    markers.push({ marker, popup, el, lngLat, spreadLngLat: null, color, index })
   })
 
-  // Fit the viewport to include the user dot + all results
+  // Fan out any markers that landed on the same spot
+  spreadOverlappingMarkers()
+
+  // Fit all markers + user dot into the viewport
   if (originLocation.value) {
     const bounds = new mapboxgl.LngLatBounds()
     bounds.extend([parseFloat(originLocation.value.lng), parseFloat(originLocation.value.lat)])
-    liveSuggestions.value.forEach(p => bounds.extend([parseFloat(p.lng), parseFloat(p.lat)]))
+    markers.forEach(({ marker }) => bounds.extend(marker.getLngLat()))
     map.fitBounds(bounds, { padding: 80, maxZoom: 15, duration: 1000 })
   }
 }
 
-// ─── Visually highlight the selected marker ───────────────────────────────────
-const updateMarkerStyles = () => {
-  markers.forEach(({ el, popup }, i) => {
-    const active = selectedSuggestionIndex.value === i
-    el.style.zIndex = active ? '10' : '1'
-    el.classList.toggle('pin-selected', active)
+// ─── Visually highlight the active marker ────────────────────────────────────
+//
+// Three things change for the selected pin:
+//   1. Its SVG swaps to the larger blue version
+//   2. Its wrapper element gets z-index 20 so it renders on top of all others
+//   3. Its popup stays visible
+//
+const updateMarkerStyles = (activeIndex) => {
+  markers.forEach(({ el, popup, color, index }) => {
+    const active = index === activeIndex
+
+    // Swap SVG inline — avoids any CSS transform / filter conflicts
+    el.innerHTML = makePinSVG(index + 1, color, active)
+
+    // The Mapbox SDK wraps `el` in an extra div — we need to set z-index on both
+    el.style.zIndex = active ? '20' : '1'
+    if (el.parentElement) el.parentElement.style.zIndex = active ? '20' : '1'
+
     if (active) popup.addTo(map)
     else popup.remove()
   })
 }
 
-// ─── Address autocomplete ──────────────────────────────────────────────────────
+// ─── Address autocomplete ─────────────────────────────────────────────────────
 const fetchPredictions = async () => {
   if (!userInput.value) { fetchedPredictions.value = null; return }
   try {
@@ -214,11 +277,8 @@ const fetchPredictions = async () => {
       `https://site--concovery-backend--gvxxw7q2vn57.code.run/google/fetchPredictions?address=${userInput.value}`
     )
     fetchedPredictions.value = res.status === 200
-      ? (res?.data?.predictions?.predictions ?? null)
-      : null
-  } catch (e) {
-    console.error('fetchPredictions:', e)
-  }
+      ? (res?.data?.predictions?.predictions ?? null) : null
+  } catch (e) { console.error('fetchPredictions:', e) }
 }
 
 const finalizePrediction = async (inputLocation) => {
@@ -238,7 +298,7 @@ const finalizePrediction = async (inputLocation) => {
   }
 }
 
-// ─── Browser geolocation helpers ─────────────────────────────────────────────
+// ─── Geolocation helpers ──────────────────────────────────────────────────────
 const getGeoLocation = () => new Promise((resolve, reject) => {
   if (!navigator.geolocation) {
     errorsChest.value = { ...errorsChest.value, error: 'Geolocation is not supported' }
@@ -255,7 +315,7 @@ const getGeoLocation = () => new Promise((resolve, reject) => {
         2: 'Location unavailable. Please search manually above.',
         3: 'Location request timed out. Please search manually above.',
       }
-      errorsChest.value = { ...errorsChest.value, error: reasons[err.code] || 'Location error. Please search manually.' }
+      errorsChest.value = { ...errorsChest.value, error: reasons[err.code] || 'Location error.' }
       reject(new Error(err.message))
     },
     { enableHighAccuracy: false, timeout: 15000, maximumAge: 30000 }
@@ -269,12 +329,10 @@ const reverseGeocode = async (lat, lng) => {
     )
     const features = res.data?.features
     return features?.length ? features[0].place_name : 'Your location'
-  } catch {
-    return 'Your location'
-  }
+  } catch { return 'Your location' }
 }
 
-// ─── Fetch nearby medical places from the backend ─────────────────────────────
+// ─── Fetch nearby medical places from the backend ────────────────────────────
 const fetchLiveSuggestions = async (userLocation) => {
   suggestionsLoading.value = true
   try {
@@ -284,16 +342,10 @@ const fetchLiveSuggestions = async (userLocation) => {
     if (res?.status === 200) {
       liveSuggestions.value = res.data.nearbyplaces
       await nextTick()
-
-      // FIX: Markers are DOM overlays — no need to wait for style.load.
-      // Just call renderMarkers() whenever map exists.
+      // mapboxgl.Marker is a DOM overlay — no need to wait for style.load
       if (map) {
-        if (map.loaded()) {
-          renderMarkers()
-        } else {
-          // Edge case: map still initialising on very first load
-          map.once('load', renderMarkers)
-        }
+        if (map.loaded()) renderMarkers()
+        else map.once('load', renderMarkers)
       }
     }
   } catch (e) {
@@ -322,19 +374,25 @@ const getUserCurrentLocation = async () => {
   }
 }
 
-// ─── Card / marker interaction ────────────────────────────────────────────────
+// ─── Card click → highlight matching map pin + zoom in like Google Maps ───────
 const handleCardClick = (index) => {
   selectedSuggestionIndex.value = index
-  updateMarkerStyles()
-  const place = liveSuggestions.value[index]
-  if (map && place) {
-    map.flyTo({ center: [parseFloat(place.lng), parseFloat(place.lat)], zoom: 15, speed: 1.2 })
-  }
+  updateMarkerStyles(index)
+
+  const m = markers[index]
+  if (!map || !m) return
+
+  // Fly to the spread position (post-fan-out) so the exact pin is centred
+  const dest = m.spreadLngLat ?? m.lngLat
+
+  // Zoom to 16 so nearby markers separate clearly; offset upward so the
+  // popup is not clipped by the top edge of the map container
+  map.flyTo({ center: dest, zoom: 16, speed: 1.2, offset: [0, -60] })
 }
 
 const handleRoute = (place, index) => {
   selectedSuggestionIndex.value = index
-  updateMarkerStyles()
+  updateMarkerStyles(index)
   if (!originLocation.value) return
   const { lat: oLat, lng: oLng } = originLocation.value
   window.open(
@@ -343,11 +401,10 @@ const handleRoute = (place, index) => {
   )
 }
 
-// ─── Lifecycle hooks ──────────────────────────────────────────────────────────
+// ─── Lifecycle ────────────────────────────────────────────────────────────────
 onMounted(async () => {
   await nextTick()
-  // Show Melbourne CBD as the default map view before any search
-  await initMap(-37.8136, 144.9631)
+  await initMap(-37.8136, 144.9631)   // Default: Melbourne CBD
 })
 
 onUnmounted(() => {
@@ -420,7 +477,6 @@ onUnmounted(() => {
         </div>
 
         <div class="flex flex-col sm:flex-row gap-4">
-          <!-- Text input + autocomplete dropdown -->
           <div class="flex-1 relative">
             <input
               type="text"
@@ -430,23 +486,18 @@ onUnmounted(() => {
               class="w-full bg-white border-2 border-[#d2d2d7] rounded-2xl px-6 py-4 text-[#1d1d1f] text-lg
                      focus:outline-none focus:border-[#007aff] transition-colors"
             />
-            <ul
-              v-if="fetchedPredictions"
+            <ul v-if="fetchedPredictions"
               class="absolute top-full left-0 z-50 min-w-full lg:min-w-[600px] max-h-[200px]
-                     shadow-2xl bg-white rounded-2xl mt-1 overflow-y-auto border border-[#d2d2d7]"
-            >
+                     shadow-2xl bg-white rounded-2xl mt-1 overflow-y-auto border border-[#d2d2d7]">
               <li
                 v-for="prediction in fetchedPredictions"
                 :key="prediction.description"
                 @click="finalizePrediction(prediction?.description)"
                 class="px-6 py-3 border-b border-[#f0f0f0] hover:bg-[#f5f5f7] cursor-pointer text-[#1d1d1f]"
-              >
-                {{ prediction?.description }}
-              </li>
+              >{{ prediction?.description }}</li>
             </ul>
           </div>
 
-          <!-- Use My Location button -->
           <button
             @click="getUserCurrentLocation"
             :disabled="buttonsDisabled.useMyLocation"
@@ -463,12 +514,11 @@ onUnmounted(() => {
           </button>
         </div>
 
-        <!-- Map legend — only shown once results are loaded -->
+        <!-- Legend — only shown once results are loaded -->
         <div v-if="liveSuggestions" class="flex flex-wrap gap-4 mt-6 pt-6 border-t border-[#d2d2d7]/50">
           <div
             v-for="(color, type) in { 'GP': '#007aff', 'Sports Medicine': '#34c759', 'Hospital': '#ff3b30', 'Physiotherapy': '#ff9500' }"
-            :key="type"
-            class="flex items-center gap-2"
+            :key="type" class="flex items-center gap-2"
           >
             <div class="w-3 h-3 rounded-full" :style="{ background: color }"/>
             <span class="text-sm text-[#86868b] font-medium">{{ type }}</span>
@@ -476,12 +526,11 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <!-- Map + results side by side -->
+      <!-- Map + results grid -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-        <!-- ── Map panel ──────────────────────────────────────────────────── -->
+        <!-- Map panel -->
         <div class="bg-white rounded-3xl overflow-hidden shadow-xl border border-[#e5e7eb]">
-          <!-- Map header -->
           <div class="bg-[#f9fafb] px-6 py-4 border-b border-[#e5e7eb] flex items-center justify-between">
             <h3 class="text-lg font-semibold text-[#1d1d1f] flex items-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
@@ -495,26 +544,23 @@ onUnmounted(() => {
               {{ liveSuggestions ? `${liveSuggestions.length} locations found` : 'Melbourne, VIC' }}
             </span>
           </div>
-          <!-- Map canvas -->
           <div ref="mapDiv" style="width:100%;height:580px;" />
         </div>
 
-        <!-- ── Results list ────────────────────────────────────────────────── -->
+        <!-- Results list -->
         <!--
-          FIX: overflow-x-visible + px-2 py-2 gives the border room so
-          the 2px selected border isn't clipped by the scroll container.
+          overflow-x-visible so the 2px selected border is not clipped
+          by the scroll container's overflow boundary.
         -->
         <div class="max-h-[640px] overflow-y-auto overflow-x-visible px-2 py-2">
           <div class="space-y-2">
 
-            <!-- Skeleton placeholders while loading -->
             <div v-if="suggestionsLoading" class="flex flex-col space-y-2">
               <SuggestionCardSkeleton/>
               <SuggestionCardSkeleton/>
               <SuggestionCardSkeleton/>
             </div>
 
-            <!-- Actual result cards -->
             <template v-else-if="liveSuggestions">
               <div
                 v-for="(suggestion, index) in liveSuggestions"
@@ -527,7 +573,6 @@ onUnmounted(() => {
                 @click="handleCardClick(index)"
               >
                 <div class="relative">
-                  <!-- Numbered badge — blue when selected, grey otherwise -->
                   <div
                     class="absolute top-3 right-3 z-10 w-6 h-6 rounded-full flex items-center
                            justify-center text-xs font-bold text-white shadow-sm transition-colors duration-200"
@@ -535,7 +580,6 @@ onUnmounted(() => {
                   >
                     {{ index + 1 }}
                   </div>
-
                   <SuggestionCard
                     :location-type="suggestion.locationType"
                     :is-open="suggestion.isOpen"
@@ -579,9 +623,7 @@ onUnmounted(() => {
         <div class="flex flex-col sm:flex-row items-center justify-between gap-6">
           <div class="flex-1 text-center sm:text-left">
             <h3 class="text-2xl font-semibold text-[#1d1d1f] mb-3">Can't Find Nearby Support?</h3>
-            <p class="text-[#86868b] text-lg">
-              Call Healthdirect for 24/7 health advice and help finding local services
-            </p>
+            <p class="text-[#86868b] text-lg">Call Healthdirect for 24/7 health advice and help finding local services</p>
           </div>
           <a href="tel:1800022222">
             <button class="inline-flex items-center gap-2 bg-[#007aff] hover:bg-[#0051d5] text-white
@@ -605,7 +647,7 @@ onUnmounted(() => {
 </template>
 
 <style>
-/* ── Mapbox popup: transparent wrapper so our custom HTML shows cleanly ── */
+/* Mapbox popup wrapper — strip default styling so our custom HTML shows cleanly */
 .concovery-popup .mapboxgl-popup-content {
   background: transparent !important;
   padding: 0 !important;
@@ -614,22 +656,14 @@ onUnmounted(() => {
 .concovery-popup .mapboxgl-popup-tip { display: none !important; }
 .mapboxgl-ctrl-logo { display: none !important; }
 
-/* ── Map pin marker animations ─────────────────────────────────────────── */
+/* Pin base styles — size comes from the SVG inside, not the wrapper */
 .map-pin {
-  width: 36px;
-  height: 44px;
   cursor: pointer;
   transform-origin: bottom center;
   transition: transform 0.15s ease;
 }
 
 .map-pin:hover {
-  transform: scale(1.25);
-}
-
-/* Scale up + brighten when the matching card is selected */
-.map-pin.pin-selected {
-  transform: scale(1.3);
-  filter: drop-shadow(0 4px 8px rgba(0, 122, 255, 0.5)) !important;
+  transform: scale(1.12);
 }
 </style>
