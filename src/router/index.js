@@ -5,51 +5,55 @@ import CRTResources from "@/pages/CRTResources.vue";
 import ExercisePage from "@/pages/ExercisePage.vue";
 import KnowYourRisk from "@/pages/KnowYourRisk.vue";
 import LocateSupportPage from "@/pages/LocateSupportPage.vue";
+import CRTResources from "@/pages/CRTResources.vue";
 import RTPRule from "@/pages/RTPRule.vue";
 import StagedRecovery2 from "@/pages/StagedRecovery2.vue";
+import ExercisePage from "@/pages/ExercisePage.vue";
 import { createRouter, createWebHistory } from "vue-router";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    { path: "/", name: "Home", component: BrainAwareness, meta: { title: "Concovery" } },
+    {
+      path: "/",
+      name: "Home",
+      component: BrainAwareness,
+      meta: { title: "Concovery" },
+    },
     {
       path: "/exploredata",
-      name: "Explore Data",
+      name: "Know Your Risk",
       component: KnowYourRisk,
-      meta: { title: "Explore Data" },
+      meta: { title: "Know Your Risk" },
     },
     {
       path: "/locatesupport",
       name: "Locate Support",
       component: LocateSupportPage,
-      meta: {
-        title: "Nearby Support",
-      },
+      meta: { title: "Nearby Support" },
     },
     {
       path: "/crtresources",
       name: "CRT Resources",
       component: CRTResources,
-      meta: {
-        title: "CRT Resources",
-      },
+      meta: { title: "CRT Resources" },
     },
     {
       path: "/rtprule",
       name: "21-Day Rule",
       component: RTPRule,
-      meta: {
-        title: "21-Day Rule",
-      },
+      meta: { title: "21-Day Rule" },
     },
     {
       path: "/iteration3/stagedrecovery",
       name: "Staged Recovery",
       component: StagedRecovery2,
-      meta: {
-        title: "Staged Recoverys",
-      },
+      meta: { title: "Staged Recovery" },
+    },
+    {
+      path: "/exercises",
+      name: "Exercises",
+      component: ExercisePage,
     },
     {
       path: "/exercises",
@@ -59,8 +63,8 @@ const router = createRouter({
   ],
 });
 
-router.beforeEach((to, from) => {
-  document.title = to.meta.title;
+router.beforeEach((to) => {
+  document.title = to.meta.title ?? "Concovery";
 });
 
 export default router;

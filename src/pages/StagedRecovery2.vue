@@ -16,6 +16,8 @@ interface Stage {
   days: string
 }
 
+
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // THE 6 AIS RECOVERY STAGES
 // These are the official Australian Institute of Sport stages.
@@ -899,6 +901,16 @@ function getStageStatus(stageId: number): 'complete' | 'current' | 'upcoming' {
   if (stageId === currentStage.value) return 'current'
   return 'upcoming'
 }
+const props = defineProps({
+  brainStatus: {
+    type: Object,
+    default: () => ({
+      title: 'What is happening in your brain',
+      description: 'Neural pathway efficiency is approaching 65%. Neurotransmitter levels are largely back to normal and cognitive function has recovered significantly.'
+    })
+  }
+})
+
 </script>
 
 <template>
@@ -1045,8 +1057,13 @@ function getStageStatus(stageId: number): 'complete' | 'current' | 'upcoming' {
 
             <h3 class="text-base font-bold text-[#1A1A1A] mb-1">Your goal today</h3>
             <p class="text-[#1A4FAB] font-semibold text-sm mb-5">{{ viewingDayData.dailyGoal }}</p>
-            <h3 class="text-base font-bold text-[#1A1A1A] mb-2">What is happening in your brain</h3>
-            <p class="text-[#1A1A1A] text-base leading-relaxed mb-5">{{ viewingDayData.cellularProcess }}</p>
+            <!-- ── BACKEND HOOK──────────────────────────────────────────────────
+            Endpoint needed: GET /brainStatus?day={viewingDay}
+            Expected response: { title: string, description: string }
+            Pass the response as the :brain-status prop on this component
+                ─────────────────────────────────────────────────────────────────────── -->
+            <h3 class="text-base font-bold text-[#1A1A1A] mb-2">{{ props.brainStatus.title }}</h3>
+            <p class="text-[#1A1A1A] text-base leading-relaxed mb-5">{{ props.brainStatus.description }}</p>
 
             <div class="bg-[#C62828]/10 border border-[#C62828] rounded-xl p-5 flex gap-2 mb-4">
               <svg class="flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C62828" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
