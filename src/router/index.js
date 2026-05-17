@@ -1,4 +1,8 @@
 import BrainAwareness from "@/components/custom-components/brainAwareness.vue";
+import ConcussionVisulization from "@/components/custom-components/ConcussionVisulization.vue";
+import ConcussionDataExplorer from "@/pages/ConcussionDataExplorer.vue";
+import CRTResources from "@/pages/CRTResources.vue";
+import ExercisePage from "@/pages/ExercisePage.vue";
 import KnowYourRisk from "@/pages/KnowYourRisk.vue";
 import LocateSupportPage from "@/pages/LocateSupportPage.vue";
 import CRTResources from "@/pages/CRTResources.vue";
@@ -45,6 +49,11 @@ const router = createRouter({
       name: "Staged Recovery",
       component: StagedRecovery2,
       meta: { title: "Staged Recovery" },
+    },
+    {
+      path: "/exercises",
+      name: "Exercises",
+      component: ExercisePage,
     },
     {
       path: "/exercises",
