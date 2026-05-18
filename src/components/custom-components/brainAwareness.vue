@@ -350,11 +350,10 @@ const barsVisible = ref(false)
           <div class="fade-up">
             <div class="eyebrow">Why it matters</div>
             <h2 class="section-title" style="font-size:clamp(40px,6vw,72px);line-height:0.95;letter-spacing:-0.03em;margin-bottom:24px;">
-              YOUR BRAIN<br>ISN'T A<br><span class="always-ice">MUSCLE.</span>
+              THE<br>COMEBACK<br><span class="always-ice">STARTS HERE.</span>
             </h2>
             <p class="body-text">
-              Muscles heal when you rest them. Brains heal on a completely different timeline,
-              one that does not care how good you feel on Day 7.
+              Built for Australian community sport players, parents and coaches.
             </p>
             <router-link to="/iteration3/stagedrecovery">
               <button class="btn-primary" style="margin-top:32px;">
@@ -372,32 +371,6 @@ const barsVisible = ref(false)
       </div>
     </section>
 
-
-    <!-- CTA — always dark -->
-    <section class="cta-section fade-up">
-      <div class="container cta-inner">
-        <div class="cta-eyebrow">Free · No sign-up · Built for Australian community sport</div>
-        <h2 class="cta-title">
-          THE<br>COMEBACK<br>
-          <span class="always-ice">STARTS HERE.</span>
-        </h2>
-        <p class="cta-sub">Built for Australian community sport players, parents and coaches.</p>
-        <div class="cta-actions">
-          <router-link to="/exploredata">
-            <button class="btn-primary btn-large">Check my sport</button>
-          </router-link>
-          <router-link to="/iteration3/stagedrecovery">
-            <button class="btn-primary btn-large">
-              Start recovery plan
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
-              </svg>
-            </button>
-          </router-link>
-        </div>
-      </div>
-    </section>
 
   </div>
 </template>
