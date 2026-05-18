@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { Line } from 'vue-chartjs'
+import BlurReveal from '@/components/ui/blur-reveal/BlurReveal.vue'
 import {
   Chart as ChartJS, Title, Tooltip, Legend,
   LineElement, PointElement,
@@ -407,17 +408,19 @@ onMounted(async () => {
       <div class="kyr-hero-edge"></div>
 
       <div class="w-full py-24 relative z-10" style="padding-left:80px; padding-right:80px;">
-        <div class="inline-flex items-center border border-white/20 rounded-full px-4 py-1.5 mb-6">
-          <span class="w-1.5 h-1.5 rounded-full bg-[#38bfff] mr-2 animate-pulse"></span>
-          <span class="text-white/50 text-xs font-medium tracking-widest uppercase">Know Your Risk</span>
-        </div>
-        <h1 class="kyr-hero-title text-white mb-6">
-          SMART ATHLETES<br>
-          KNOW THEIR <span style="color:#38bfff;">RISKS.</span>
-        </h1>
-        <p class="text-white/55 text-lg font-light max-w-lg leading-relaxed">
-          You tape your ankles. You warm up. You train hard. Concussion is the one risk you cannot see coming. Understanding it is what separates good athletes from great ones.
-        </p>
+        <BlurReveal :delay="0.1" :duration="0.75">
+          <div class="inline-flex items-center border border-white/20 rounded-full px-4 py-1.5 mb-6">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#38bfff] mr-2 animate-pulse"></span>
+            <span class="text-white/50 text-xs font-medium tracking-widest uppercase">Know Your Risk</span>
+          </div>
+          <h1 class="kyr-hero-title text-white mb-6">
+            SMART ATHLETES<br>
+            KNOW THEIR <span style="color:#38bfff;">RISKS.</span>
+          </h1>
+          <p class="text-white/55 text-lg font-light max-w-lg leading-relaxed">
+            You tape your ankles. You warm up. You train hard. Concussion is the one risk you cannot see coming. Understanding it is what separates good athletes from great ones.
+          </p>
+        </BlurReveal>
       </div>
 
       <!-- EKG heartbeat line — full width, flush to hero bottom -->
