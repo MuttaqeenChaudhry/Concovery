@@ -719,6 +719,8 @@ const reactionStartTime = ref(0)
 const reactionResult    = ref(0)
 const reactionRound     = ref(0)
 let reactionTimeout: ReturnType<typeof setTimeout> | null = null
+// Persisted reaction history for the progress log
+const reactionHistory   = ref<{ day: number; avg: number; date: string }[]>([])
 
 function startReactionTest() {
   reactionPhase.value = 'waiting'
@@ -839,6 +841,9 @@ onMounted(() => {
   const savedCognitive = localStorage.getItem('concovery_cognitive')
   if (savedCognitive) cognitiveHistory.value = JSON.parse(savedCognitive)
 
+  const savedReaction = localStorage.getItem('concovery_reaction')
+  if (savedReaction) reactionHistory.value = JSON.parse(savedReaction)
+
   // If the user is returning from the exercise page, reopen the modal at the journal step
   const returnFlag = localStorage.getItem('concovery_return_modal')
   if (returnFlag === 'true') {
@@ -894,6 +899,25 @@ const daysUntilReturn = computed(() => {
 })
 
 const hasSymptoms = computed(() => symptomAnswers.value.some(a => a === true))
+
+// Groups all localStorage logs by day for the progress log section
+const progressLog = computed(() => {
+  const days = new Set<number>()
+  journalEntries.value.forEach(e   => days.add(e.day))
+  sleepHistory.value.forEach(e     => days.add(e.day))
+  cognitiveHistory.value.forEach(e => days.add(e.day))
+  reactionHistory.value.forEach(e  => days.add(e.day))
+
+  return Array.from(days).sort((a, b) => b - a).map(day => ({
+    day,
+    journal:   journalEntries.value.find(e => e.day === day) || null,
+    sleep:     sleepHistory.value.find(e => e.day === day) || null,
+    cognitive: cognitiveHistory.value.filter(e => e.day === day).at(-1) || null,
+    reaction:  reactionHistory.value.filter(e => e.day === day).at(-1) || null,
+  }))
+})
+
+const showProgressLog = ref(false)
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // SECTION 14 — CORE METHODS
@@ -1589,6 +1613,120 @@ const props = defineProps({
             </Transition>
           </div>
         </div>
+      </div>
+    </section>
+
+    <!-- PROGRESS LOG -->
+    <section v-if="progressLog.length > 0" class="sr-s3 py-16">
+      <div class="max-w-[1200px] mx-auto px-10">
+
+        <div class="flex items-center justify-between mb-8">
+          <div>
+            <h2 class="text-2xl font-bold text-[#1A1A1A]">My progress log</h2>
+            <p class="text-sm text-[#5A7A9B] mt-1">Everything you have tracked so far, grouped by day.</p>
+          </div>
+          <button
+            @click="showProgressLog = !showProgressLog"
+            class="inline-flex items-center gap-2 border border-[#38bfff] text-[#38bfff] px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-[#38bfff] hover:text-[#07090e] transition-colors"
+          >
+            {{ showProgressLog ? 'Hide log' : 'Show log' }}
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+              class="transition-transform duration-200" :class="showProgressLog ? 'rotate-180' : ''">
+              <path d="m6 9 6 6 6-6"/>
+            </svg>
+          </button>
+        </div>
+
+        <Transition name="slide-up">
+          <div v-if="showProgressLog" class="space-y-4">
+            <div
+              v-for="entry in progressLog" :key="entry.day"
+              class="bg-white rounded-2xl border border-[#EBEBEB] shadow-sm overflow-hidden"
+            >
+              <!-- Card header -->
+              <div class="flex items-center gap-4 px-6 py-4 border-b border-[#EBEBEB] bg-[#f8fbff]">
+                <div class="w-10 h-10 rounded-full bg-[#38bfff] flex items-center justify-center flex-shrink-0">
+                  <span class="text-sm font-black text-[#07090e]">{{ entry.day }}</span>
+                </div>
+                <div>
+                  <span class="text-sm font-bold text-[#1A1A1A]">Day {{ entry.day }}</span>
+                  <span class="text-xs text-[#5A7A9B] ml-2">{{ dayData[Math.min(entry.day, 21)]?.stageName }}</span>
+                </div>
+              </div>
+
+              <!-- Log rows -->
+              <div class="px-6 py-5 space-y-4">
+
+                <!-- Sleep -->
+                <div v-if="entry.sleep" class="flex items-start gap-3">
+                  <div class="w-8 h-8 rounded-lg bg-[#EBF5FF] flex items-center justify-center flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                      fill="none" stroke="#38bfff" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                  </div>
+                  <div>
+                    <p class="text-xs font-semibold text-[#5A7A9B] uppercase tracking-wide mb-0.5">Sleep</p>
+                    <div class="flex items-center gap-2">
+                      <div class="w-2 h-2 rounded-full"
+                        :style="{ background: entry.sleep.quality === 'well' ? '#1B7C3D' : entry.sleep.quality === 'okay' ? '#E65100' : '#C62828' }"/>
+                      <span class="text-sm font-medium text-[#1A1A1A] capitalize">Slept {{ entry.sleep.quality }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Cognitive -->
+                <div v-if="entry.cognitive" class="flex items-start gap-3">
+                  <div class="w-8 h-8 rounded-lg bg-[#EBF5FF] flex items-center justify-center flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                      fill="none" stroke="#38bfff" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                  </div>
+                  <div>
+                    <p class="text-xs font-semibold text-[#5A7A9B] uppercase tracking-wide mb-0.5">Digit span test</p>
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs font-bold px-2 py-0.5 rounded-full"
+                        :class="entry.cognitive.correct ? 'bg-[#1B7C3D]/10 text-[#1B7C3D]' : 'bg-[#C62828]/10 text-[#C62828]'">
+                        {{ entry.cognitive.correct ? 'Correct' : 'Incorrect' }}
+                      </span>
+                      <span class="text-sm text-[#5A7A9B]">{{ entry.cognitive.length }} digit sequence</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Reaction -->
+                <div v-if="entry.reaction" class="flex items-start gap-3">
+                  <div class="w-8 h-8 rounded-lg bg-[#EBF5FF] flex items-center justify-center flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                      fill="none" stroke="#38bfff" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  </div>
+                  <div>
+                    <p class="text-xs font-semibold text-[#5A7A9B] uppercase tracking-wide mb-0.5">Reaction time</p>
+                    <div class="flex items-center gap-2">
+                      <span class="text-sm font-bold text-[#38bfff]">{{ entry.reaction.avg }}ms</span>
+                      <span class="text-xs font-medium"
+                        :style="{ color: entry.reaction.avg < 250 ? '#1B7C3D' : entry.reaction.avg < 350 ? '#38bfff' : entry.reaction.avg < 450 ? '#E65100' : '#C62828' }">
+                        {{ entry.reaction.avg < 250 ? 'Excellent' : entry.reaction.avg < 350 ? 'Good' : entry.reaction.avg < 450 ? 'Fair' : 'Still recovering' }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Journal -->
+                <div v-if="entry.journal" class="flex items-start gap-3">
+                  <div class="w-8 h-8 rounded-lg bg-[#EBF5FF] flex items-center justify-center flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                      fill="none" stroke="#38bfff" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-xs font-semibold text-[#5A7A9B] uppercase tracking-wide mb-0.5">Journal</p>
+                    <p class="text-sm text-[#1A1A1A] leading-relaxed italic">"{{ entry.journal.text }}"</p>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </Transition>
+
       </div>
     </section>
 
