@@ -93,7 +93,7 @@ const barsVisible = ref(false)
           </p>
 
           <div class="hero-actions">
-            <router-link to="/exploredata">
+            <router-link to="/iteration3/stagedrecovery">
               <button class="btn-primary">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                   fill="none" stroke="currentColor" stroke-width="2">
@@ -101,10 +101,10 @@ const barsVisible = ref(false)
                   <line x1="12" y1="20" x2="12" y2="4"/>
                   <line x1="6"  y1="20" x2="6"  y2="14"/>
                 </svg>
-                Check my sport's risk
+                Track my recovery
               </button>
             </router-link>
-            <router-link to="/iteration3/stagedrecovery">
+            <router-link to="/locatesupport">
               <button class="btn-primary">I recently had a knock →</button>
             </router-link>
           </div>
@@ -228,7 +228,7 @@ const barsVisible = ref(false)
               Come back at full strength on Day 21. Not at 30% on Day 7.
               Your career lasts longer that way.
             </p>
-            <router-link to="/rtprule">
+            <router-link to="/iteration3/stagedrecovery">
               <button class="btn-white">
                 See the full recovery guide
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
@@ -397,14 +397,14 @@ const barsVisible = ref(false)
           Muscles heal when you rest them. Brains heal on a completely different timeline,
           one that does not care how good you feel on Day 7.
         </p>
-        <router-link to="/rtprule">
+        <router-link to="/iteration3/stagedrecovery">
           <button class="btn-primary" style="margin-top:32px;">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
               fill="none" stroke="currentColor" stroke-width="2.5">
               <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
               <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
             </svg>
-            Read the science
+            Track my recovery
           </button>
         </router-link>
       </div>
