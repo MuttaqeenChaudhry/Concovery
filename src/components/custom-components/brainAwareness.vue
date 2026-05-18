@@ -517,7 +517,10 @@ const barsVisible = ref(false)
 .stats-section { background: #e8f3ff; }
 .stats-row { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(3,1fr); }
 .stat-item { padding: 56px 40px; text-align: center; position: relative; transition: background 0.3s; }
-.stat-item:hover { background: rgba(56,191,255,0.06); }
+.stat-item:hover { background: #0f1a2e; }
+.stat-item:hover .stat-num  { color: #ffffff; }
+.stat-item:hover .stat-desc { color: rgba(255,255,255,0.55); }
+.stat-item:hover .stat-desc strong { color: #ffffff; }
 .stat-item::before {
   content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
   background: #38bfff; transform: scaleX(0); transform-origin: left;
