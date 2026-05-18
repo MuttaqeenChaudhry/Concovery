@@ -588,7 +588,7 @@ body.light .emergency-section { background: #07090e; }
 }
 .hero-content { position: relative; z-index: 4; width: 55%; flex-shrink: 0; margin-top: -60px; }
 .hero-image-wrap {
-  position: absolute; right: -309px; top: 0; bottom: 0; width: 48%; overflow: hidden; z-index: 2;
+  position: absolute; right: 1px; top: 0; bottom: 0; width: 48%; overflow: hidden; z-index: 2;
   mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.7) 25%, rgba(0,0,0,1) 100%);
   -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.7) 25%, rgba(0,0,0,1) 100%);
 }
