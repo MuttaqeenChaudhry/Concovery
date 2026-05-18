@@ -900,6 +900,22 @@ const daysUntilReturn = computed(() => {
 
 const hasSymptoms = computed(() => symptomAnswers.value.some(a => a === true))
 
+// Compares today's activities with yesterday's to flag which ones are new
+const newActivitiesToday = computed(() => {
+  if (!viewingDay.value || viewingDay.value <= 1) return new Set<string>()
+  const yesterday = dayData[viewingDay.value - 1]
+  const today     = dayData[viewingDay.value]
+  if (!yesterday || !today) return new Set<string>()
+  const yesterdayNames = new Set(yesterday.allowed.map(a => a.activity))
+  return new Set(
+    today.allowed
+      .filter(a => !yesterdayNames.has(a.activity))
+      .map(a => a.activity)
+  )
+})
+
+const changedActivityCount = computed(() => newActivitiesToday.value.size)
+
 // Groups all localStorage logs by day for the progress log section
 const progressLog = computed(() => {
   const days = new Set<number>()
@@ -1092,10 +1108,10 @@ const props = defineProps({
     </section>
 
     <!-- BRAIN STATUS + ACTIVITIES -->
-    <section v-if="viewingDay && viewingDayData" class="sr-s2 py-28">
+    <section v-if="viewingDay && viewingDayData" class="sr-s2 py-16">
       <div class="max-w-[1200px] mx-auto px-10">
 
-        <!-- FIX: "(You are on Day N)" uses text-[#0a1628] so it's visible on light blue banner -->
+        <!-- Preview banner -->
         <div v-if="!isViewingToday" class="bg-[#38bfff]/10 border border-[#38bfff]/30 rounded-xl px-5 py-3 mb-6 flex items-center justify-between">
           <div class="flex items-center gap-3">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bfff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -1105,77 +1121,38 @@ const props = defineProps({
           <button @click="selectedDay = null" class="text-xs text-[#38bfff] font-semibold hover:underline">Back to today</button>
         </div>
 
+        <!-- ━━ WHAT CHANGED TODAY STRIP ━━ -->
+        <div v-if="viewingDay > 1" class="mb-6 flex items-center gap-3 flex-wrap">
+          <div v-if="changedActivityCount > 0"
+            class="inline-flex items-center gap-2 bg-[#38bfff] text-[#07090e] text-xs font-bold px-4 py-2 rounded-full">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+            {{ changedActivityCount }} new activit{{ changedActivityCount === 1 ? 'y' : 'ies' }} today
+          </div>
+          <div v-else
+            class="inline-flex items-center gap-2 bg-[#f0f4f8] text-[#5A7A9B] text-xs font-semibold px-4 py-2 rounded-full">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+            Same activities as yesterday
+          </div>
+          <div class="inline-flex items-center gap-2 bg-[#f0f4f8] text-[#5A7A9B] text-xs font-semibold px-4 py-2 rounded-full">
+            <div class="w-2 h-2 rounded-full"
+              :style="{ background: viewingDayData.brainRecoveryPct < 40 ? '#C62828' : viewingDayData.brainRecoveryPct < 70 ? '#E65100' : '#1B7C3D' }"/>
+            Brain {{ viewingDayData.brainRecoveryPct }}% recovered
+          </div>
+          <div class="inline-flex items-center gap-2 bg-[#f0f4f8] text-[#5A7A9B] text-xs font-semibold px-4 py-2 rounded-full">
+            Stage {{ viewingDayData.stage }} — {{ viewingDayData.stageName }}
+          </div>
+        </div>
+
+        <!-- ━━ MAIN GRID: Activities LEFT, Brain RIGHT ━━ -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-          <!-- Brain status card -->
+          <!-- ── ACTIVITIES CARD (LEFT / PRIMARY) ── -->
           <div class="sr-card rounded-2xl p-10 border border-[#EBEBEB] shadow-sm">
-            <span class="inline-block bg-[#38bfff]/10 text-[#38bfff] text-xs font-semibold px-4 py-1.5 rounded-full mb-4">
-              Day {{ viewingDay }}, {{ viewingDayData.stageName }}
-            </span>
-
-            <div class="mb-6">
-              <div class="flex justify-between text-sm text-[#5A7A9B] mb-1">
-                <span>Brain recovery</span>
-                <span class="font-bold text-[#38bfff]">{{ viewingDayData.brainRecoveryPct }}%</span>
-              </div>
-              <div class="h-5 bg-[#EBEBEB] rounded-full overflow-hidden">
-                <div
-                  class="h-full rounded-full transition-all duration-700"
-                  :style="{ width: `${viewingDayData.brainRecoveryPct}%`, background: viewingDayData.brainRecoveryPct < 40 ? '#C62828' : viewingDayData.brainRecoveryPct < 70 ? '#E65100' : '#1B7C3D' }"
-                />
-              </div>
-            </div>
-
-            <h3 class="text-base font-bold text-[#1A1A1A] mb-1">Your goal today</h3>
-            <p class="text-[#38bfff] font-semibold text-sm mb-5">{{ viewingDayData.dailyGoal }}</p>
-
-            <!-- Brain description toggle: Simple / Scientific -->
-            <div class="flex items-center justify-between mb-3">
-              <h3 class="text-base font-bold text-[#1A1A1A]">What is happening in your brain</h3>
-              <div class="flex items-center gap-1 bg-[#f0f4f8] rounded-full p-1">
-                <button
-                  @click="showSimpleDescription = true"
-                  class="text-xs font-semibold px-3 py-1 rounded-full transition-all"
-                  :class="showSimpleDescription ? 'bg-white text-[#1A1A1A] shadow-sm' : 'text-[#5A7A9B] hover:text-[#1A1A1A]'"
-                >Simple</button>
-                <button
-                  @click="showSimpleDescription = false"
-                  class="text-xs font-semibold px-3 py-1 rounded-full transition-all"
-                  :class="!showSimpleDescription ? 'bg-white text-[#1A1A1A] shadow-sm' : 'text-[#5A7A9B] hover:text-[#1A1A1A]'"
-                >Scientific</button>
-              </div>
-            </div>
-            <Transition name="fade-scale" mode="out-in">
-              <p v-if="showSimpleDescription" key="simple"
-                class="text-[#1A1A1A] text-base leading-relaxed mb-5">
-                {{ viewingDayData.descriptionSimple }}
-              </p>
-              <p v-else key="science"
-                class="text-[#5A7A9B] text-sm leading-relaxed mb-5 italic">
-                {{ viewingDayData.cellularProcess }}
-              </p>
-            </Transition>
-
-            <div class="bg-[#C62828]/10 border border-[#C62828] rounded-xl p-5 flex gap-2 mb-4">
-              <svg class="flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C62828" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              <p class="text-sm text-[#1A1A1A] font-semibold">{{ viewingDayData.warningSign }}</p>
-            </div>
-
-            <div class="bg-[#38bfff]/5 border border-[#38bfff]/20 rounded-xl p-5 flex gap-2">
-              <svg class="flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bfff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              <p class="text-sm text-[#1A1A1A] italic leading-relaxed">{{ viewingDayData.insight }}</p>
-            </div>
-            <p class="text-sm text-[#5A7A9B] italic mt-4">Source: Giza and Hovda, 2014. Neurometabolic Cascade. AIS 2024</p>
-          </div>
-
-          <!-- Activities card -->
-          <div class="sr-card rounded-2xl p-10 border border-[#EBEBEB] shadow-sm">
-            <h3 class="text-3xl font-bold text-[#1A1A1A] mb-8">What you can do today</h3>
 
             <div class="mb-8">
               <div class="flex items-center gap-2 text-[#1B7C3D] font-bold text-base mb-5">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1B7C3D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                Allowed Today
+                What you can do today
               </div>
 
               <div class="space-y-3" :key="`activities-${viewingDay}`">
@@ -1203,7 +1180,7 @@ const props = defineProps({
                   </div>
 
                   <div class="flex-1">
-                    <div class="flex items-center gap-2 mb-1">
+                    <div class="flex items-center gap-2 mb-1 flex-wrap">
                       <button
                         v-if="!a.interactive"
                         @click="toggleActivity(`${viewingDay}-${a.activity}`)"
@@ -1212,7 +1189,15 @@ const props = defineProps({
                       >
                         <svg v-if="isActivityChecked(`${viewingDay}-${a.activity}`)" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
                       </button>
-                      <span class="font-semibold text-[#1A1A1A] text-sm" :class="isActivityChecked(`${viewingDay}-${a.activity}`) && !a.interactive ? 'line-through text-[#5A7A9B]' : ''">{{ a.activity }}</span>
+                      <span class="font-semibold text-[#1A1A1A] text-sm"
+                        :class="isActivityChecked(`${viewingDay}-${a.activity}`) && !a.interactive ? 'line-through text-[#5A7A9B]' : ''">
+                        {{ a.activity }}
+                      </span>
+                      <!-- NEW badge — only on activities not present yesterday -->
+                      <span v-if="newActivitiesToday.has(a.activity)"
+                        class="text-xs font-bold px-2 py-0.5 rounded-full bg-[#38bfff] text-[#07090e]">
+                        New
+                      </span>
                     </div>
                     <p class="text-sm text-[#5A7A9B] leading-relaxed mb-2">{{ a.detail }}</p>
 
@@ -1270,7 +1255,8 @@ const props = defineProps({
                           <div/>
                         </div>
                       </div>
-                      <div v-else-if="cognitivePhase === 'result'" class="rounded-xl p-6 text-center" :class="cognitiveResult === 'correct' ? 'bg-[#1B7C3D]/10 border border-[#1B7C3D]' : 'bg-[#C62828]/10 border border-[#C62828]'">
+                      <div v-else-if="cognitivePhase === 'result'" class="rounded-xl p-6 text-center"
+                        :class="cognitiveResult === 'correct' ? 'bg-[#1B7C3D]/10 border border-[#1B7C3D]' : 'bg-[#C62828]/10 border border-[#C62828]'">
                         <p class="font-bold text-sm mb-1" :class="cognitiveResult === 'correct' ? 'text-[#1B7C3D]' : 'text-[#C62828]'">{{ cognitiveResult === 'correct' ? 'Correct sequence' : 'Incorrect sequence' }}</p>
                         <p class="text-sm text-[#5A7A9B] mb-1">Sequence: {{ cognitiveSequence.join(', ') }}</p>
                         <p class="text-sm text-[#5A7A9B] mb-3">Your input: {{ cognitiveInput.join(', ') }}</p>
@@ -1311,13 +1297,11 @@ const props = defineProps({
             <div class="mb-6">
               <div class="flex items-center gap-2 text-[#C62828] font-bold text-base mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C62828" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                Not Today
+                Not today
               </div>
               <div class="flex flex-wrap gap-2">
-                <div
-                  v-for="r in viewingDayData.restricted" :key="r"
-                  class="inline-flex items-center gap-2 sr-card-red border border-[#C62828]/20 rounded-full px-4 py-2"
-                >
+                <div v-for="r in viewingDayData.restricted" :key="r"
+                  class="inline-flex items-center gap-2 sr-card-red border border-[#C62828]/20 rounded-full px-4 py-2">
                   <span class="text-[#C62828] font-bold text-sm flex-shrink-0">✗</span>
                   <span class="text-[#1A1A1A] text-sm">{{ r }}</span>
                 </div>
@@ -1329,6 +1313,65 @@ const props = defineProps({
               <p class="text-sm text-[#1A1A1A] font-semibold">If any symptoms come back, stop immediately and return to Stage 1</p>
             </div>
           </div>
+
+          <!-- ── BRAIN CARD (RIGHT / SECONDARY) — always open ── -->
+          <div class="sr-card rounded-2xl border border-[#EBEBEB] shadow-sm overflow-hidden">
+
+            <div class="flex items-center gap-3 px-10 py-6 border-b border-[#EBEBEB]">
+              <span class="inline-block bg-[#38bfff]/10 text-[#38bfff] text-xs font-semibold px-3 py-1 rounded-full">
+                Day {{ viewingDay }} — {{ viewingDayData.stageName }}
+              </span>
+              <span class="text-sm text-[#5A7A9B]">Brain {{ viewingDayData.brainRecoveryPct }}% recovered</span>
+            </div>
+
+            <!-- Recovery bar -->
+            <div class="px-10 pb-4 pt-4">
+              <div class="h-3 bg-[#EBEBEB] rounded-full overflow-hidden">
+                <div class="h-full rounded-full transition-all duration-700"
+                  :style="{ width: `${viewingDayData.brainRecoveryPct}%`, background: viewingDayData.brainRecoveryPct < 40 ? '#C62828' : viewingDayData.brainRecoveryPct < 70 ? '#E65100' : '#1B7C3D' }"
+                />
+              </div>
+              <div class="flex justify-between text-xs text-[#5A7A9B] mt-1">
+                <span>0%</span>
+                <span class="font-bold" :style="{ color: viewingDayData.brainRecoveryPct < 40 ? '#C62828' : viewingDayData.brainRecoveryPct < 70 ? '#E65100' : '#1B7C3D' }">{{ viewingDayData.brainRecoveryPct }}%</span>
+                <span>100%</span>
+              </div>
+            </div>
+
+            <div class="px-10 pb-10">
+              <h3 class="text-base font-bold text-[#1A1A1A] mb-1 mt-2">Your goal today</h3>
+              <p class="text-[#38bfff] font-semibold text-sm mb-5">{{ viewingDayData.dailyGoal }}</p>
+
+              <!-- Brain description toggle: Simple / Scientific -->
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-base font-bold text-[#1A1A1A]">What is happening in your brain</h3>
+                <div class="flex items-center gap-1 bg-[#f0f4f8] rounded-full p-1">
+                  <button @click="showSimpleDescription = true"
+                    class="text-xs font-semibold px-3 py-1 rounded-full transition-all"
+                    :class="showSimpleDescription ? 'bg-white text-[#1A1A1A] shadow-sm' : 'text-[#5A7A9B]'">Simple</button>
+                  <button @click="showSimpleDescription = false"
+                    class="text-xs font-semibold px-3 py-1 rounded-full transition-all"
+                    :class="!showSimpleDescription ? 'bg-white text-[#1A1A1A] shadow-sm' : 'text-[#5A7A9B]'">Scientific</button>
+                </div>
+              </div>
+              <Transition name="fade-scale" mode="out-in">
+                <p v-if="showSimpleDescription" key="simple" class="text-[#1A1A1A] text-base leading-relaxed mb-5">{{ viewingDayData.descriptionSimple }}</p>
+                <p v-else key="science" class="text-[#5A7A9B] text-sm leading-relaxed mb-5 italic">{{ viewingDayData.cellularProcess }}</p>
+              </Transition>
+
+              <div class="bg-[#C62828]/10 border border-[#C62828] rounded-xl p-5 flex gap-2 mb-4">
+                <svg class="flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C62828" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <p class="text-sm text-[#1A1A1A] font-semibold">{{ viewingDayData.warningSign }}</p>
+              </div>
+
+              <div class="bg-[#38bfff]/5 border border-[#38bfff]/20 rounded-xl p-5 flex gap-2 mb-4">
+                <svg class="flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bfff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <p class="text-sm text-[#1A1A1A] italic leading-relaxed">{{ viewingDayData.insight }}</p>
+              </div>
+              <p class="text-sm text-[#5A7A9B] italic">Source: Giza and Hovda, 2014. Neurometabolic Cascade. AIS 2024</p>
+            </div>
+          </div>
+
         </div>
       </div>
     </section>
