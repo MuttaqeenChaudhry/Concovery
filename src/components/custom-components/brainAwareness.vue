@@ -99,66 +99,71 @@ onMounted(() => {
          HERO
     ══════════════════════════════════════ -->
     <section class="hero">
-      <!-- Athlete background photo -->
-      <div class="hero-backdrop" />
-      <!-- Dark gradient so text is readable -->
-      <div class="hero-overlay" />
-      <!-- Moving diagonal speed lines -->
-      <div class="hero-lines" />
-      <!-- Left edge ice bar -->
-      <div class="hero-edge" />
+  <div class="hero-overlay" />
+  <div class="hero-lines" />
+  <div class="hero-edge" />
 
-      <div class="hero-content">
-        <!-- Badge -->
-        <div class="hero-badge">
-          <span class="hero-badge-dot" />
-          Australian Community Sport
-        </div>
+  <div class="hero-inner">
 
-        <!-- Main title — original wording -->
-        <h1 class="hero-title">CONCOVERY</h1>
-
-        <!-- Tagline — "Recover" is always ice blue regardless of mode -->
-        <p class="hero-tagline">
-          Play hard. <span class="always-ice">Recover</span> smart. Come back stronger.
-        </p>
-
-        <p class="hero-sub">
-          Concussion awareness for Victorian community sport players, parents and coaches.
-          Real AIHW data. Actual science. No guessing.
-        </p>
-
-        <div class="hero-actions">
-          <router-link to="/exploredata">
-            <button class="btn-primary">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="20" x2="18" y2="10"/>
-                <line x1="12" y1="20" x2="12" y2="4"/>
-                <line x1="6"  y1="20" x2="6"  y2="14"/>
-              </svg>
-              Check my sport's risk
-            </button>
-          </router-link>
-          <router-link to="/iteration3/stagedrecovery">
-            <button class="btn-ghost">I recently had a knock →</button>
-          </router-link>
-        </div>
+    <!-- Left — text -->
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="hero-badge-dot" />
+        Australian Community Sport
       </div>
 
-      <!-- EKG heartbeat line -->
-      <div class="hero-ekg">
-        <svg class="ekg-svg" viewBox="0 0 1200 56" fill="none"
-          xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-          <polyline
-            points="0,28 80,28 100,28 115,4 130,52 145,8 160,28 240,28
-                    320,28 340,28 355,4 370,52 385,8 400,28 480,28
-                    560,28 580,28 595,4 610,52 625,8 640,28 720,28
-                    800,28 820,28 835,4 850,52 865,8 880,28 960,28 1200,28"
-            stroke="#38bfff" stroke-width="1.5" fill="none"/>
-        </svg>
+      <h1 class="hero-title">
+        PLAY<br>
+        HARD.<br>
+        <span class="always-ice">RECOVER</span><br>
+        SMART.<br>
+        COME BACK<br>
+        STRONGER.
+      </h1>
+
+      <p class="hero-sub">
+        Concussion awareness for Victorian community sport players, parents and coaches.
+        Real AIHW data. Actual science. No guessing.
+      </p>
+
+      <div class="hero-actions">
+        <router-link to="/exploredata">
+          <button class="btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="20" x2="18" y2="10"/>
+              <line x1="12" y1="20" x2="12" y2="4"/>
+              <line x1="6"  y1="20" x2="6"  y2="14"/>
+            </svg>
+            Check my sport's risk
+          </button>
+        </router-link>
+        <router-link to="/iteration3/stagedrecovery">
+          <button class="btn-ghost">I recently had a knock →</button>
+        </router-link>
       </div>
-    </section>
+    </div>
+
+    <!-- Right — athlete image, mirrored to face inward -->
+    <div class="hero-image-wrap">
+      <img src="/bg_image2.png" class="hero-image" alt="Athlete" />
+    </div>
+
+  </div>
+
+  <!-- EKG heartbeat line -->
+  <div class="hero-ekg">
+    <svg class="ekg-svg" viewBox="0 0 1200 56" fill="none"
+      xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+      <polyline
+        points="0,28 80,28 100,28 115,4 130,52 145,8 160,28 240,28
+                320,28 340,28 355,4 370,52 385,8 400,28 480,28
+                560,28 580,28 595,4 610,52 625,8 640,28 720,28
+                800,28 820,28 835,4 850,52 865,8 880,28 960,28 1200,28"
+        stroke="#38bfff" stroke-width="1.5" fill="none"/>
+    </svg>
+  </div>
+</section>
 
 
     <!-- ══════════════════════════════════════
@@ -781,56 +786,126 @@ body.light {
 /* ══════════════════════════════════════════
    HERO
 ══════════════════════════════════════════ */
-.hero { position: relative; min-height: 100vh; display: flex; align-items: center; overflow: hidden; background: #07090e; }
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
 
-.hero-backdrop {
-  position: absolute; inset: 0;
-  background-image: url('/bg_image2.png');
-  background-size: cover; background-position: center;
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  background: #07090e;
 }
+
 .hero-overlay {
-  position: absolute; inset: 0;
-  background: linear-gradient(105deg, rgba(7,9,14,0.97) 40%, rgba(7,9,14,0.65) 68%, rgba(7,9,14,0.25) 100%);
+  position: absolute; inset: 0; z-index: 1;
+  background: linear-gradient(
+    to right,
+    rgba(7,9,14,1.0) 0%,
+    rgba(7,9,14,0.85) 55%,
+    rgba(7,9,14,0.2) 100%
+  );
 }
+
 .hero-lines {
-  position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+  position: absolute; inset: 0;
+  overflow: hidden; pointer-events: none; z-index: 1;
 }
 .hero-lines::before {
-  content: ''; position: absolute; top: -200%; left: -50%; width: 200%; height: 400%;
-  background-image: repeating-linear-gradient(-65deg, transparent, transparent 80px, rgba(56,191,255,0.025) 80px, rgba(56,191,255,0.025) 81px);
+  content: ''; position: absolute; top: -200%; left: -50%;
+  width: 200%; height: 400%;
+  background-image: repeating-linear-gradient(
+    -65deg, transparent, transparent 80px,
+    rgba(56,191,255,0.025) 80px, rgba(56,191,255,0.025) 81px
+  );
   animation: linesDrift 22s linear infinite;
 }
-@keyframes linesDrift { from { transform: translateX(0); } to { transform: translateX(81px); } }
+@keyframes linesDrift {
+  from { transform: translateX(0); }
+  to   { transform: translateX(81px); }
+}
 
 .hero-edge {
-  position: absolute; left: 0; top: 20%; bottom: 20%; width: 3px; z-index: 2;
+  position: absolute; left: 0; top: 20%; bottom: 20%;
+  width: 3px; z-index: 2;
   background: linear-gradient(to bottom, transparent, #38bfff 40%, #38bfff 60%, transparent);
 }
 
-.hero-content { position: relative; z-index: 3; width: 100%; padding: 0 80px; }
+/* Two column layout — text left, image right */
+.hero-inner {
+  position: relative; z-index: 3;
+  width: 100%; max-width: 1200px;
+  margin: 0 auto;
+  padding: 120px 80px 100px;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+
+.hero-content {
+  flex: 0 0 auto;
+  width: 52%;
+}
+
+/* Athlete image — right side, mirrored so they face inward */
+.hero-image-wrap {
+  flex: 1;
+  position: relative;
+  height: 85vh;
+  overflow: hidden;
+  mask-image: linear-gradient(to left, rgba(0,0,0,0.9) 40%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,0.9) 40%, transparent 100%);
+}
+
+.hero-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  transform: scaleX(-1);
+  opacity: 0.75;
+}
 
 .hero-badge {
   display: inline-flex; align-items: center; gap: 8px;
   border: 1px solid rgba(255,255,255,0.18); border-radius: 100px;
-  padding: 6px 16px; margin-bottom: 28px;
+  padding: 6px 16px; margin-bottom: 24px;
   font-size: 11px; font-weight: 500; letter-spacing: 2px;
   text-transform: uppercase; color: rgba(255,255,255,0.6);
 }
-.hero-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: #38bfff; animation: blink 2s infinite; }
+.hero-badge-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #38bfff; animation: blink 2s infinite;
+}
 @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
 
+/* Bebas Neue — big stacked headline like the mockup */
 .hero-title {
-  font-size: clamp(72px, 13vw, 148px); font-weight: 900;
-  line-height: 0.88; letter-spacing: -0.03em;
-  color: white; margin-bottom: 16px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(64px, 10vw, 120px);
+  line-height: 0.92;
+  letter-spacing: 2px;
+  color: white;
+  margin-bottom: 28px;
 }
-.hero-tagline { font-size: clamp(18px,2.5vw,26px); font-weight: 600; color: white; margin-bottom: 16px; line-height: 1.3; }
-.hero-sub { font-size: 16px; font-weight: 300; color: rgba(255,255,255,0.5); max-width: 440px; line-height: 1.75; margin-bottom: 40px; }
+
+.hero-sub {
+  font-size: 16px; font-weight: 300;
+  color: rgba(255,255,255,0.5);
+  max-width: 440px; line-height: 1.75; margin-bottom: 40px;
+}
+
 .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; }
 
-.hero-ekg { position: absolute; bottom: 60px; left: 80px; right: 80px; z-index: 3; height: 56px; overflow: hidden; opacity: 0.28; }
+.hero-ekg {
+  position: absolute; bottom: 60px; left: 80px; right: 80px;
+  z-index: 3; height: 56px; overflow: hidden; opacity: 0.28;
+}
 .ekg-svg { width: 200%; height: 100%; animation: ekgScroll 3s linear infinite; }
-@keyframes ekgScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes ekgScroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
 
 /* ══════════════════════════════════════════
    STATS
