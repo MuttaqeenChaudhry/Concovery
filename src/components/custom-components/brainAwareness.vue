@@ -113,13 +113,10 @@ onMounted(() => {
       </div>
 
       <h1 class="hero-title">
-        PLAY<br>
-        HARD.<br>
-        <span class="always-ice">RECOVER</span><br>
-        SMART.<br>
-        COME BACK<br>
-        STRONGER.
-      </h1>
+  PLAY HARD.<br>
+  <span class="always-ice">RECOVER</span> SMART.<br>
+  COME BACK STRONGER.
+</h1>
 
       <p class="hero-sub">
         Concussion awareness for Victorian community sport players, parents and coaches.
@@ -127,21 +124,21 @@ onMounted(() => {
       </p>
 
       <div class="hero-actions">
-        <router-link to="/exploredata">
-          <button class="btn-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-              fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="20" x2="18" y2="10"/>
-              <line x1="12" y1="20" x2="12" y2="4"/>
-              <line x1="6"  y1="20" x2="6"  y2="14"/>
-            </svg>
-            Check my sport's risk
-          </button>
-        </router-link>
-        <router-link to="/iteration3/stagedrecovery">
-          <button class="btn-ghost">I recently had a knock →</button>
-        </router-link>
-      </div>
+  <router-link to="/exploredata">
+    <button class="btn-primary">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="20" x2="18" y2="10"/>
+        <line x1="12" y1="20" x2="12" y2="4"/>
+        <line x1="6"  y1="20" x2="6"  y2="14"/>
+      </svg>
+      Check my sport's risk
+    </button>
+  </router-link>
+  <router-link to="/iteration3/stagedrecovery">
+    <button class="btn-primary">I recently had a knock →</button>
+  </router-link>
+</div>
     </div>
 
     <!-- Right — athlete image, mirrored to face inward -->
@@ -836,34 +833,42 @@ body.light {
   position: relative; z-index: 3;
   width: 100%; max-width: 1200px;
   margin: 0 auto;
-  padding: 120px 80px 100px;
+  padding: 0 80px;
   display: flex;
   align-items: center;
   gap: 40px;
+  min-height: 100vh;
+  padding-top: 0;
 }
 
 .hero-content {
-  flex: 0 0 auto;
-  width: 52%;
+  position: relative;
+  z-index: 4;
+  width: 55%;
+  flex-shrink: 0;
+  margin-top: -60px;
 }
 
 /* Athlete image — right side, mirrored so they face inward */
 .hero-image-wrap {
-  flex: 1;
-  position: relative;
-  height: 85vh;
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 48%;
   overflow: hidden;
-  mask-image: linear-gradient(to left, rgba(0,0,0,0.9) 40%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,0.9) 40%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.7) 25%, rgba(0,0,0,1) 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.7) 25%, rgba(0,0,0,1) 100%);
+  z-index: 2;
 }
 
 .hero-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center top;
+  object-position: top center;
   transform: scaleX(-1);
-  opacity: 0.75;
+  opacity: 0.85;
 }
 
 .hero-badge {
@@ -882,17 +887,17 @@ body.light {
 /* Bebas Neue — big stacked headline like the mockup */
 .hero-title {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(64px, 10vw, 120px);
-  line-height: 0.92;
+  font-size: clamp(48px, 6.5vw, 86px);
+  line-height: 1.05;
   letter-spacing: 2px;
   color: white;
-  margin-bottom: 28px;
+  margin-bottom: 20px;
 }
 
 .hero-sub {
-  font-size: 16px; font-weight: 300;
+  font-size: 15px; font-weight: 300;
   color: rgba(255,255,255,0.5);
-  max-width: 440px; line-height: 1.75; margin-bottom: 40px;
+  max-width: 420px; line-height: 1.7; margin-bottom: 20px;
 }
 
 .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; }
