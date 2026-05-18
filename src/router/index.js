@@ -1,4 +1,3 @@
-import BrainAwareness from "@/components/custom-components/brainAwareness.vue";
 import CRTResources from "@/pages/CRTResources.vue";
 import KnowYourRisk from "@/pages/KnowYourRisk.vue";
 import LocateSupportPage from "@/pages/LocateSupportPage.vue";
@@ -6,6 +5,7 @@ import RTPRule from "@/pages/RTPRule.vue";
 import StagedRecovery2 from "@/pages/StagedRecovery2.vue";
 import ExercisePage from "@/pages/ExercisePage.vue";
 import { createRouter, createWebHistory } from "vue-router";
+import Home from "@/pages/Home.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -13,7 +13,7 @@ const router = createRouter({
     {
       path: "/",
       name: "Home",
-      component: BrainAwareness,
+      component: Home,
       meta: { title: "Concovery" },
     },
     {
