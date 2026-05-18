@@ -39,6 +39,15 @@ onMounted(() => {
   )
   document.querySelectorAll('.fade-up').forEach(el => observer.observe(el))
 })
+
+const animActive = ref(true)
+
+function restartAnim() {
+  animActive.value = false
+  setTimeout(() => animActive.value = true, 50)
+}
+
+const barsVisible = ref(false)
 </script>
 
 <template>

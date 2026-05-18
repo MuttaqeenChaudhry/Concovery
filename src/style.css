@@ -114,6 +114,10 @@
   --color-chart-1: var(--chart-1);
 }
 
+body {
+  transition: background 0.35s ease, color 0.35s ease;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

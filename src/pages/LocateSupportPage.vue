@@ -21,10 +21,10 @@ const BACKEND_URL    = 'https://site--concovery-backend--gvxxw7q2vn57.code.run'
 
 // ─── Marker colours by clinic type ───────────────────────────────────────────
 const CLINIC_COLOURS = {
-  'GP':              '#007aff',
-  'Sports Medicine': '#34c759',
-  'Hospital':        '#ff3b30',
-  'Physiotherapy':   '#ff9500',
+  'GP':              '#1A4FAB',
+  'Sports Medicine': '#1B7C3D',
+  'Hospital':        '#C62828',
+  'Physiotherapy':   '#E65100',
 }
 
 
@@ -38,15 +38,13 @@ const fetchedPredictions = ref(null)
 const selectedLocation   = ref(null)
 
 // Results
-// allResults holds everything from the API.
-// shownResults is filtered by the current radius — what actually displays.
-const allResults  = ref(null)
+const allResults   = ref(null)
 const shownResults = ref(null)
 
 // UI flags
 const isLoading          = ref(false)
 const errors             = ref({})
-const isLocating         = ref(false)   // true while GPS is resolving
+const isLocating         = ref(false)
 const selectedCardIndex  = ref(null)
 const radiusKm           = ref(5)
 const mapDiv             = ref(null)
@@ -87,36 +85,29 @@ function distanceKm(lat1, lng1, lat2, lng2) {
  */
 function applyRadiusFilter() {
   if (!allResults.value || !searchCentre.value) return
-
   const { lat, lng } = searchCentre.value
-
   shownResults.value = allResults.value.filter(place =>
     distanceKm(lat, lng, parseFloat(place.lat), parseFloat(place.lng)) <= radiusKm.value
   )
-
   selectedCardIndex.value = null
   renderMapPins()
 }
 
 /**
  * Builds the SVG for a map pin.
- *
- * Selected pins are CIRCLES so they're never confused with unselected
- * GP pins, which are also blue teardrops.
- * Unselected pins are teardrops coloured by clinic type.
+ * Selected pins are CIRCLES. Unselected pins are teardrops by clinic type.
  */
 function buildPinSVG(number, colour, isSelected = false) {
   if (isSelected) {
     return `
       <svg width="46" height="46" viewBox="0 0 46 46" xmlns="http://www.w3.org/2000/svg"
-           style="filter:drop-shadow(0 4px 14px rgba(0,122,255,0.65));display:block;">
-        <circle cx="23" cy="23" r="21" fill="#007aff" stroke="white" stroke-width="3.5"/>
+           style="filter:drop-shadow(0 4px 14px rgba(26,79,171,0.65));display:block;">
+        <circle cx="23" cy="23" r="21" fill="#1A4FAB" stroke="white" stroke-width="3.5"/>
         <text x="23" y="28" text-anchor="middle" fill="white"
               font-family="system-ui,-apple-system,sans-serif"
               font-size="16" font-weight="700">${number}</text>
       </svg>`
   }
-
   return `
     <svg width="36" height="44" viewBox="0 0 36 44" xmlns="http://www.w3.org/2000/svg"
          style="filter:drop-shadow(0 2px 4px rgba(0,0,0,0.28));display:block;">
@@ -134,15 +125,12 @@ function buildPinSVG(number, colour, isSelected = false) {
  * This fans them out in a small circle so all pins are individually visible.
  */
 function spreadStackedPins() {
-  const STACK_THRESHOLD = 0.0003   // degrees (~30 m) — "same spot" tolerance
-  const FAN_RADIUS      = 0.00045  // degrees (~45 m) — how far to push them apart
-
+  const STACK_THRESHOLD = 0.0003
+  const FAN_RADIUS      = 0.00045
   const assigned = new Set()
 
   shownResults.value.forEach((place, i) => {
     if (assigned.has(i)) return
-
-    // Find every other pin within the threshold of this one
     const cluster = [i]
     assigned.add(i)
 
@@ -153,18 +141,15 @@ function spreadStackedPins() {
       if (sameLat && sameLng) { cluster.push(j); assigned.add(j) }
     })
 
-    if (cluster.length === 1) return  // nothing to spread
+    if (cluster.length === 1) return
 
-    // Centroid of the cluster
     const cLat = cluster.reduce((sum, idx) => sum + parseFloat(shownResults.value[idx].lat), 0) / cluster.length
     const cLng = cluster.reduce((sum, idx) => sum + parseFloat(shownResults.value[idx].lng), 0) / cluster.length
 
-    // Place each pin evenly around the centroid (like a clock face)
     cluster.forEach((pinIndex, position) => {
       const angle  = (2 * Math.PI * position) / cluster.length - Math.PI / 2
       const newLat = cLat + FAN_RADIUS * Math.cos(angle)
       const newLng = cLng + (FAN_RADIUS * Math.sin(angle)) / Math.cos(cLat * Math.PI / 180)
-
       mapMarkers[pinIndex].marker.setLngLat([newLng, newLat])
       mapMarkers[pinIndex].spreadPosition = [newLng, newLat]
     })
@@ -176,10 +161,6 @@ function spreadStackedPins() {
 // MAP SETUP
 // ============================================================
 
-/**
- * Moves the pulsing blue dot to the user's actual GPS position.
- * Only called after the user clicks "Use My Location".
- */
 function updateGpsDot() {
   if (!map || !gpsPosition.value) return
   const { lat, lng } = gpsPosition.value
@@ -189,16 +170,11 @@ function updateGpsDot() {
   })
 }
 
-/**
- * Creates the map on first call, or just flies the camera on subsequent calls.
- * The GPS dot is kept separate from the camera position.
- */
 async function initMap(lat, lng) {
   mapboxgl.accessToken = MAPBOX_TOKEN
   await nextTick()
   if (!mapDiv.value) return
 
-  // Map already exists — just move the camera
   if (map) {
     map.flyTo({ center: [lng, lat], zoom: 14, speed: 1.4 })
     updateGpsDot()
@@ -215,7 +191,6 @@ async function initMap(lat, lng) {
   map.addControl(new mapboxgl.NavigationControl(), 'top-right')
   map.addControl(new mapboxgl.ScaleControl(), 'bottom-left')
 
-  // Animated pulsing dot — drawn frame by frame using the Canvas API
   const DOT_SIZE = 120
   const pulsingDot = {
     width: DOT_SIZE, height: DOT_SIZE, data: new Uint8Array(DOT_SIZE * DOT_SIZE * 4),
@@ -227,22 +202,20 @@ async function initMap(lat, lng) {
     },
 
     render() {
-      const progress = (performance.now() % 1200) / 1200   // 0 → 1, loops every 1.2s
+      const progress = (performance.now() % 1200) / 1200
       const radius   = (DOT_SIZE / 2) * 0.3
       const ctx      = this.context
 
       ctx.clearRect(0, 0, DOT_SIZE, DOT_SIZE)
 
-      // Outer fading ring
       ctx.beginPath()
       ctx.arc(DOT_SIZE / 2, DOT_SIZE / 2, radius * (1 + progress * 1.4), 0, Math.PI * 2)
-      ctx.fillStyle = `rgba(0,122,255,${0.4 * (1 - progress)})`
+      ctx.fillStyle = `rgba(26,79,171,${0.4 * (1 - progress)})`
       ctx.fill()
 
-      // Solid inner dot
       ctx.beginPath()
       ctx.arc(DOT_SIZE / 2, DOT_SIZE / 2, radius, 0, Math.PI * 2)
-      ctx.fillStyle   = '#007aff'
+      ctx.fillStyle   = '#1A4FAB'
       ctx.strokeStyle = 'white'
       ctx.lineWidth   = 3
       ctx.fill()
@@ -256,8 +229,6 @@ async function initMap(lat, lng) {
 
   map.on('load', () => {
     map.addImage('pulsing-dot', pulsingDot, { pixelRatio: 2 })
-
-    // Start with an empty source — dot only appears after GPS is granted
     map.addSource('gps-dot', {
       type: 'geojson',
       data: { type: 'FeatureCollection', features: [] },
@@ -268,58 +239,48 @@ async function initMap(lat, lng) {
       source: 'gps-dot',
       layout: { 'icon-image': 'pulsing-dot', 'icon-allow-overlap': true },
     })
-
     updateGpsDot()
     if (shownResults.value?.length) renderMapPins()
   })
 }
 
-/**
- * Removes old pins and places fresh ones for the current shownResults.
- * Also spreads any stacked pins and fits the viewport.
- */
 function renderMapPins() {
-  // Remove old pins
   mapMarkers.forEach(({ marker, popup }) => { popup.remove(); marker.remove() })
   mapMarkers = []
 
   if (!map || !shownResults.value?.length) return
 
   shownResults.value.forEach((place, index) => {
-    const colour = CLINIC_COLOURS[place.locationType] || '#007aff'
+    const colour = CLINIC_COLOURS[place.locationType] || '#1A4FAB'
     const coords = [parseFloat(place.lng), parseFloat(place.lat)]
 
-    // Build the pin element
     const el       = document.createElement('div')
     el.className   = 'map-pin'
     el.innerHTML   = buildPinSVG(index + 1, colour, false)
 
-    // Hover tooltip
     const popup = new mapboxgl.Popup({
       closeButton:  false,
       closeOnClick: false,
       offset:       [0, -56],
       className:    'concovery-popup',
     }).setHTML(`
-      <div style="background:white;border:1px solid #e5e7eb;border-radius:12px;
-                  padding:10px 14px;min-width:180px;box-shadow:0 4px 16px rgba(0,0,0,0.12);">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">
+      <div style="background:white;border:1px solid #EBEBEB;border-radius:14px;
+                  padding:12px 16px;min-width:190px;box-shadow:0 6px 24px rgba(0,0,0,0.10);">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
           <span style="background:${colour};color:white;font-size:10px;font-weight:700;
-                       padding:2px 8px;border-radius:20px;">${place.locationType || 'CLINIC'}</span>
-          <span style="color:${place.isOpen ? '#16a34a' : '#dc2626'};font-size:11px;font-weight:600;">
+                       padding:2px 10px;border-radius:20px;">${place.locationType || 'CLINIC'}</span>
+          <span style="color:${place.isOpen ? '#1B7C3D' : '#C62828'};font-size:11px;font-weight:600;">
             ${place.isOpen ? '● Open' : '● Closed'}
           </span>
         </div>
-        <div style="color:#111827;font-weight:600;font-size:13px;margin-bottom:2px;">${place.name}</div>
-        <div style="color:#6b7280;font-size:11px;">${place.distance || ''}</div>
+        <div style="color:#1A1A1A;font-weight:700;font-size:13px;margin-bottom:2px;">${place.name}</div>
+        <div style="color:#5A7A9B;font-size:11px;">${place.distance || ''}</div>
       </div>`)
 
     el.addEventListener('mouseenter', () => popup.addTo(map))
     el.addEventListener('mouseleave', () => {
       if (selectedCardIndex.value !== index) popup.remove()
     })
-
-    // Clicking a pin on the map selects the matching card in the list
     el.addEventListener('click', () => selectCard(index))
 
     const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
@@ -331,7 +292,6 @@ function renderMapPins() {
 
   spreadStackedPins()
 
-  // Zoom the map to fit all visible pins
   if (searchCentre.value) {
     const bounds = new mapboxgl.LngLatBounds()
     bounds.extend([parseFloat(searchCentre.value.lng), parseFloat(searchCentre.value.lat)])
@@ -340,21 +300,12 @@ function renderMapPins() {
   }
 }
 
-/**
- * Swaps each pin's SVG so the selected one shows as a circle,
- * all others revert to their coloured teardrops.
- * Also fixes z-index so the selected pin always sits on top.
- */
 function refreshPinStyles(activeIndex) {
   mapMarkers.forEach(({ el, popup, colour, index }) => {
     const isActive = index === activeIndex
-
     el.innerHTML = buildPinSVG(index + 1, colour, isActive)
-
-    // Mapbox wraps our element in an extra div — set z-index on both
     el.style.zIndex = isActive ? '20' : '1'
     if (el.parentElement) el.parentElement.style.zIndex = isActive ? '20' : '1'
-
     if (isActive) popup.addTo(map)
     else          popup.remove()
   })
@@ -380,23 +331,16 @@ async function fetchAddressPredictions() {
   }
 }
 
-/**
- * Fetches all nearby places from the backend (no radius param —
- * we filter on the client with applyRadiusFilter so the slider
- * works instantly without extra API calls).
- */
 async function fetchNearbyPlaces(centre) {
   isLoading.value         = true
   selectedCardIndex.value = null
-
   try {
     const res = await axios.get(
       `${BACKEND_URL}/google/nearbyplaces?lat=${centre.lat}&lng=${centre.lng}`
     )
     if (res.status === 200) {
       allResults.value = res.data.nearbyplaces
-      applyRadiusFilter()   // sets shownResults and draws pins
-
+      applyRadiusFilter()
       await nextTick()
       if (map) {
         if (map.loaded()) renderMapPins()
@@ -426,17 +370,14 @@ async function reverseGeocode(lat, lng) {
 // USER INTERACTIONS
 // ============================================================
 
-/** Called when the user picks a suggestion from the autocomplete dropdown. */
 async function selectPrediction(address) {
   isLoading.value          = true
   selectedLocation.value   = address
   userInput.value          = address
   fetchedPredictions.value = null
-
   try {
     const geo      = await locateAddress(GOOGLE_API_KEY, address)
-    searchCentre.value = geo   // this is the search origin — NOT the GPS dot
-
+    searchCentre.value = geo
     await initMap(geo.lat, geo.lng)
     await fetchNearbyPlaces(geo)
   } catch {
@@ -446,21 +387,15 @@ async function selectPrediction(address) {
   }
 }
 
-/** Uses the browser's GPS to find the user's current position. */
 async function useMyLocation() {
   isLocating.value = true
-
   try {
     const coords = await getBrowserLocation()
-
-    // Both the GPS dot AND the search centre point to the user's real position
     gpsPosition.value  = coords
     searchCentre.value = coords
-
-    const { lat, lng }   = coords
-    userInput.value      = await reverseGeocode(lat, lng)
+    const { lat, lng } = coords
+    userInput.value    = await reverseGeocode(lat, lng)
     selectedLocation.value = userInput.value
-
     await initMap(lat, lng)
     await fetchNearbyPlaces(coords)
   } catch (err) {
@@ -470,17 +405,12 @@ async function useMyLocation() {
   }
 }
 
-/**
- * Wraps navigator.geolocation in a Promise so we can use async/await.
- * Sets a user-friendly error message if the user denies permission.
- */
 function getBrowserLocation() {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
       errors.value = { ...errors.value, general: 'Geolocation is not supported by your browser.' }
       return reject(new Error('Geolocation not supported'))
     }
-
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         errors.value = { ...errors.value, general: null }
@@ -500,22 +430,14 @@ function getBrowserLocation() {
   })
 }
 
-/**
- * Handles selecting a card — shared by both card clicks and map pin clicks.
- * Updates the selected index, refreshes pin styles, flies the camera,
- * and scrolls the card into view.
- */
 function selectCard(index) {
   selectedCardIndex.value = index
   refreshPinStyles(index)
-
   const pin = mapMarkers[index]
   if (map && pin) {
     const dest = pin.spreadPosition ?? pin.coords
     map.flyTo({ center: dest, zoom: 16, speed: 1.2, offset: [0, -60] })
   }
-
-  // Scroll the right-hand card into view
   nextTick(() => {
     document.getElementById(`card-${index}`)?.scrollIntoView({
       behavior: 'smooth',
@@ -527,7 +449,6 @@ function selectCard(index) {
 function openDirections(place, index) {
   selectCard(index)
   if (!searchCentre.value) return
-
   const { lat: fromLat, lng: fromLng } = searchCentre.value
   const directionsUrl = `https://www.google.com/maps/dir/?api=1`
                       + `&origin=${fromLat},${fromLng}`
@@ -543,7 +464,7 @@ function openDirections(place, index) {
 
 onMounted(async () => {
   await nextTick()
-  await initMap(-37.8136, 144.9631)   // Default view: Melbourne CBD
+  await initMap(-37.8136, 144.9631)
 })
 
 onUnmounted(() => {
@@ -554,198 +475,155 @@ onUnmounted(() => {
 
 <template>
   <div class="bg-white min-h-screen">
-    <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-20">
 
-      <!-- Page heading -->
-      <div class="text-center mb-12">
-        <BlurReveal :delay="0.2" :duration="0.75">
-          <h1 class="text-5xl sm:text-7xl font-semibold text-[#1d1d1f] mb-6 tracking-tight">
-            Find Medical Support
+    <!-- ══════════════════════════════════════════════════════════════════════
+      HERO SECTION
+    ══════════════════════════════════════════════════════════════════════════ -->
+    <section class="fs-hero text-white">
+      <div class="fs-hero-lines"></div>
+      <div class="fs-hero-edge"></div>
+
+      <div class="w-full py-24 relative z-10" style="padding-left:80px; padding-right:80px;">
+        <BlurReveal :delay="0.1" :duration="0.75">
+          <div class="inline-flex items-center border border-white/20 rounded-full px-4 py-1.5 mb-6">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#38bfff] mr-2 animate-pulse"></span>
+            <span class="text-white/50 text-xs font-medium tracking-widest uppercase">Locate Support</span>
+          </div>
+          <h1 class="fs-hero-title text-white mb-6">
+            FIND THE RIGHT<br>
+            HELP <span style="color:#38bfff;">NEAR YOU.</span>
           </h1>
-          <p class="text-xl sm:text-2xl text-[#86868b] max-w-3xl mx-auto">
-            Locate GPs, sports medicine clinics, and hospitals near you for concussion assessment and care.
+          <p class="text-white/55 text-lg font-light max-w-lg leading-relaxed">
+            A concussion needs a real doctor, not a search engine. Use this tool to find GPs, sports medicine clinics and hospitals within reach — before you need them in a hurry.
           </p>
         </BlurReveal>
       </div>
 
-      <!-- Emergency banner -->
-      <div class="bg-gradient-to-br from-[#ff3b30] to-[#ff2d55] rounded-3xl p-8 mb-12 shadow-2xl shadow-red-500/20">
-        <div class="flex items-start gap-4">
-          <div class="bg-white rounded-2xl p-4 flex-shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#ff3b30]">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" x2="12" y1="8" y2="12"/>
-              <line x1="12" x2="12.01" y1="16" y2="16"/>
-            </svg>
-          </div>
-          <div>
-            <h2 class="text-2xl font-semibold text-white mb-3">
-              Experiencing Severe Symptoms? Call 000 Immediately
-            </h2>
-            <p class="text-white/95 text-lg mb-4 leading-relaxed">
-              If you or someone you know is experiencing severe headache, vomiting, seizures,
-              loss of consciousness, slurred speech, or unusual behaviour — call 000 or go to
-              the nearest emergency department immediately.
-            </p>
-            <a href="tel:000">
-              <button class="inline-flex items-center gap-2 bg-white text-[#ff3b30] hover:bg-white/90
-                             px-10 py-4 text-lg rounded-full font-semibold shadow-lg
-                             transition-all hover:scale-105">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6
-                           19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72
-                           12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6
-                           l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-                </svg>
-                Call 000
-              </button>
-            </a>
-          </div>
-        </div>
+      <!-- EKG heartbeat line -->
+      <div class="fs-ekg">
+        <svg class="fs-ekg-svg" viewBox="0 0 1200 56" fill="none"
+          xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+          <polyline
+            points="0,28
+                    60,28  80,28  95,4  110,52  125,8  140,28
+                    340,28 360,28 375,4 390,52  405,8  420,28
+                    620,28 640,28 655,4 670,52  685,8  700,28
+                    900,28 920,28 935,4 950,52  965,8  980,28
+                    1200,28"
+            stroke="#38bfff" stroke-width="1.5" fill="none"/>
+        </svg>
+      </div>
+    </section>
+
+
+
+
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+      FULL-SCREEN MAP WITH FLOATING PANEL
+    ══════════════════════════════════════════════════════════════════════════ -->
+    <section class="relative p-3" style="height:calc(100vh - 80px); min-height:680px; background: linear-gradient(160deg, #EBF3FF 0%, #DEF0FF 50%, #EBF3FF 100%);">
+
+      <!-- Map — inset with rounded corners -->
+      <div class="relative w-full h-full rounded-3xl overflow-hidden shadow-xl">
+        <div ref="mapDiv" style="width:100%;height:100%;" />
+
+        <!-- Recenter button — bottom right of the map -->
+        <button
+          v-if="searchCentre"
+          @click="initMap(searchCentre.lat, searchCentre.lng)"
+          title="Return to your location"
+          class="absolute bottom-5 right-5 z-20 w-11 h-11 rounded-2xl flex items-center justify-center shadow-lg transition-all hover:scale-105"
+          style="background: white; border: 1.5px solid #EBEBEB;"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A4FAB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 2v3m0 14v3M2 12h3m14 0h3"/>
+            <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" opacity="0.3" fill="#1A4FAB"/>
+          </svg>
+        </button>
+
       </div>
 
-      <!-- Search bar -->
-      <div class="bg-[#f5f5f7] rounded-3xl p-8 mb-12 shadow-lg">
-        <div class="flex items-center gap-3 mb-6">
-          <div class="bg-[#007aff] rounded-2xl p-3">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white">
-              <circle cx="11" cy="11" r="8"/>
-              <path d="m21 21-4.3-4.3"/>
-            </svg>
+      <!-- Floating panel — overlays on left, contains search + results -->
+      <div class="absolute top-5 left-5 bottom-5 z-20 flex flex-col rounded-3xl overflow-hidden shadow-2xl" style="width:420px; background: rgba(255,255,255,0.96); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
+
+        <!-- ── Panel top: label + search ── -->
+        <div class="flex-shrink-0 px-6 pt-6 pb-4">
+
+          <!-- Label row -->
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-[#1A4FAB] text-xs font-bold tracking-widest uppercase">Locate Support</span>
+            <span v-if="shownResults" class="text-xs text-[#5A7A9B] font-medium bg-[#EBF3FF] px-3 py-1 rounded-full">
+              {{ shownResults.length }} found
+            </span>
           </div>
-          <h2 class="text-2xl font-semibold text-[#1d1d1f]">Find Nearby Support</h2>
-        </div>
 
-        <div class="flex flex-col sm:flex-row gap-4">
-
-          <!-- Address input with autocomplete dropdown -->
-          <div class="flex-1 relative">
+          <!-- Search input -->
+          <div class="relative mb-3">
+            <div class="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5A7A9B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </div>
             <input
               type="text"
-              placeholder="Enter your suburb or postcode..."
+              placeholder="Suburb or postcode..."
               v-model="userInput"
               @keyup="fetchAddressPredictions"
-              class="w-full bg-white border-2 border-[#d2d2d7] rounded-2xl px-6 py-4
-                     text-[#1d1d1f] text-lg focus:outline-none focus:border-[#007aff] transition-colors"
+              class="w-full bg-[#F7F9FC] border-2 border-[#EBEBEB] rounded-2xl pl-10 pr-4 py-3.5 text-[#1A1A1A] text-sm font-medium focus:outline-none focus:border-[#1A4FAB] focus:bg-white transition-colors"
             />
+            <!-- Autocomplete dropdown -->
             <ul
               v-if="fetchedPredictions"
-              class="absolute top-full left-0 z-50 min-w-full lg:min-w-[600px] max-h-[200px]
-                     shadow-2xl bg-white rounded-2xl mt-1 overflow-y-auto border border-[#d2d2d7]"
+              class="absolute top-full left-0 z-50 w-full shadow-xl bg-white rounded-2xl mt-1.5 overflow-hidden border border-[#EBEBEB]"
             >
               <li
                 v-for="prediction in fetchedPredictions"
                 :key="prediction.description"
                 @click="selectPrediction(prediction.description)"
-                class="px-6 py-3 border-b border-[#f0f0f0] hover:bg-[#f5f5f7] cursor-pointer text-[#1d1d1f]"
+                class="flex items-center gap-3 px-4 py-3 border-b border-[#F7F9FC] hover:bg-[#EBF3FF] cursor-pointer text-[#1A1A1A] text-sm font-medium transition-colors last:border-0"
               >
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1A4FAB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
                 {{ prediction.description }}
               </li>
             </ul>
           </div>
 
+          <!-- Use My Location button -->
           <button
             @click="useMyLocation"
             :disabled="isLocating"
-            class="inline-flex items-center justify-center gap-2 bg-[#007aff] hover:bg-[#0051d5]
-                   text-white px-8 py-4 rounded-2xl font-semibold whitespace-nowrap transition-all
-                   disabled:opacity-50 disabled:pointer-events-none"
+            class="w-full inline-flex items-center justify-center gap-2 bg-[#1A4FAB] hover:bg-[#1440A0] text-white px-4 py-3.5 rounded-2xl font-semibold text-sm transition-colors disabled:opacity-50 disabled:pointer-events-none"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/>
               <circle cx="12" cy="10" r="3"/>
             </svg>
             {{ isLocating ? 'Locating...' : 'Use My Location' }}
           </button>
-        </div>
 
-        <!-- Colour legend — appears once results are loaded -->
-        <div v-if="shownResults" class="flex flex-wrap gap-4 mt-6 pt-6 border-t border-[#d2d2d7]/50">
-          <div
-            v-for="(colour, type) in CLINIC_COLOURS"
-            :key="type"
-            class="flex items-center gap-2"
-          >
-            <div class="w-3 h-3 rounded-full" :style="{ background: colour }"/>
-            <span class="text-sm text-[#86868b] font-medium">{{ type }}</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Map + results grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-        <!-- Map panel -->
-        <div class="bg-white rounded-3xl overflow-hidden shadow-xl border border-[#e5e7eb]">
-
-          <!-- Map header -->
-          <div class="bg-[#f9fafb] px-6 py-4 border-b border-[#e5e7eb] flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-[#1d1d1f] flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                stroke="#007aff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/>
-                <circle cx="12" cy="10" r="3"/>
-              </svg>
-              Nearby Providers
-            </h3>
-            <span class="text-xs text-[#86868b] font-medium">
-              <template v-if="shownResults">
-                {{ shownResults.length }} of {{ allResults?.length ?? 0 }} within {{ radiusKm }} km
-              </template>
-              <template v-else>Melbourne, VIC</template>
-            </span>
+          <!-- Error -->
+          <div v-if="errors.general" class="mt-3 flex items-center gap-2 bg-[#FFF5F5] border border-[#C62828]/20 rounded-xl px-4 py-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C62828" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span class="text-[#C62828] text-xs font-medium">{{ errors.general }}</span>
           </div>
 
-          <!-- Map canvas -->
-          <div class="relative">
-            <div ref="mapDiv" style="width:100%;height:540px;" />
-
-            <!-- Radius slider — floats over the bottom of the map -->
-            <div class="absolute bottom-5 left-4 right-4 z-10
-                        bg-white/88 backdrop-blur-md rounded-2xl px-5 py-3
-                        shadow-lg border border-white/60">
-              <div class="flex items-center gap-3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
-                     fill="none" stroke="#007aff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-                     class="flex-shrink-0">
-                  <circle cx="12" cy="12" r="10"/>
-                  <polyline points="12 6 12 12 16 14"/>
-                </svg>
-                <span class="text-xs font-semibold text-[#1d1d1f] whitespace-nowrap flex-shrink-0">
-                  Search radius
-                </span>
-                <input
-                  type="range"
-                  min="1" max="20" step="1"
-                  v-model.number="radiusKm"
-                  @input="applyRadiusFilter"
-                  class="flex-1 accent-[#007aff] cursor-pointer"
-                />
-                <span class="text-sm font-bold text-[#007aff] w-14 text-right flex-shrink-0">
-                  {{ radiusKm }} km
-                </span>
-              </div>
-              <div class="flex justify-between mt-1 px-6">
-                <span class="text-[10px] text-[#86868b]">1 km</span>
-                <span class="text-[10px] text-[#86868b]">20 km</span>
-              </div>
+          <!-- Legend — appears once results are loaded -->
+          <div v-if="shownResults" class="flex flex-wrap gap-3 mt-4 pt-4 border-t border-[#EBEBEB]">
+            <div v-for="(colour, type) in CLINIC_COLOURS" :key="type" class="flex items-center gap-1.5">
+              <div class="w-2.5 h-2.5 rounded-full flex-shrink-0" :style="{ background: colour }"/>
+              <span class="text-xs text-[#5A7A9B] font-medium">{{ type }}</span>
             </div>
           </div>
         </div>
 
-        <!-- Results list -->
-        <!--
-          overflow-x-visible ensures the selected card's 2px blue border
-          isn't clipped by the scroll container edge.
-        -->
-        <div class="max-h-[640px] overflow-y-auto overflow-x-visible px-2 py-2">
+        <!-- Divider -->
+        <div class="h-px bg-[#EBEBEB] flex-shrink-0 mx-4"/>
+
+        <!-- ── Scrollable results ── -->
+        <div class="flex-1 overflow-y-auto px-4 py-4">
           <div class="space-y-2">
 
-            <!-- Loading skeletons -->
+            <!-- Loading -->
             <div v-if="isLoading" class="flex flex-col space-y-2">
               <SuggestionCardSkeleton/>
               <SuggestionCardSkeleton/>
@@ -754,23 +632,13 @@ onUnmounted(() => {
 
             <!-- Results -->
             <template v-else-if="shownResults">
-
-              <!-- Shown when radius is too tight -->
-              <div
-                v-if="shownResults.length === 0"
-                class="flex flex-col items-center gap-3 py-16 text-center text-[#86868b]"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="opacity-30">
-                  <circle cx="11" cy="11" r="8"/>
-                  <path d="m21 21-4.3-4.3"/>
-                </svg>
-                <p class="font-medium text-sm">
-                  No providers within {{ radiusKm }} km.<br>Try increasing the search radius.
-                </p>
+              <div v-if="shownResults.length === 0" class="flex flex-col items-center gap-3 py-12 text-center">
+                <div class="w-12 h-12 rounded-full bg-[#EBF3FF] flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1A4FAB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                </div>
+                <p class="text-[#5A7A9B] text-sm">No providers found in this area.</p>
               </div>
 
-              <!-- Individual result cards -->
               <div
                 v-else
                 v-for="(place, index) in shownResults"
@@ -778,20 +646,15 @@ onUnmounted(() => {
                 :id="`card-${index}`"
                 class="rounded-2xl transition-all duration-200 cursor-pointer bg-white"
                 :class="selectedCardIndex === index
-                  ? 'border-2 border-[#007aff] shadow-lg shadow-blue-500/20 scale-[1.01]'
-                  : 'border border-[#e5e7eb] hover:border-[#c7c7cc] hover:shadow-sm'"
+                  ? 'border-2 border-[#1A4FAB] shadow-md shadow-blue-500/15'
+                  : 'border border-[#EBEBEB] hover:border-[#1A4FAB]/30 hover:shadow-sm'"
                 @click="selectCard(index)"
               >
                 <div class="relative">
-                  <!-- Number badge in the top-right corner -->
                   <div
-                    class="absolute top-3 right-3 z-10 w-6 h-6 rounded-full flex items-center
-                           justify-center text-xs font-bold text-white shadow-sm transition-colors"
-                    :style="{ background: selectedCardIndex === index ? '#007aff' : '#9ca3af' }"
-                  >
-                    {{ index + 1 }}
-                  </div>
-
+                    class="absolute top-3 right-3 z-10 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm transition-colors"
+                    :style="{ background: selectedCardIndex === index ? '#1A4FAB' : '#9ca3af' }"
+                  >{{ index + 1 }}</div>
                   <SuggestionCard
                     :location-type="place.locationType"
                     :is-open="place.isOpen"
@@ -805,64 +668,165 @@ onUnmounted(() => {
               </div>
             </template>
 
-            <!-- Empty state — before any search has been done -->
-            <div v-else class="flex flex-col items-center justify-center py-20 gap-4 text-center">
-              <div v-if="errors.general" class="flex flex-col items-center gap-3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-500">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="12" x2="12" y1="8" y2="12"/>
-                  <line x1="12" x2="12.01" y1="16" y2="16"/>
-                </svg>
-                <span class="text-red-500 font-medium text-sm max-w-xs">{{ errors.general }}</span>
-              </div>
-              <div v-else class="flex flex-col items-center gap-3 text-[#86868b]">
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="opacity-30">
+            <!-- Pre-search empty state -->
+            <div v-else class="flex flex-col items-center justify-center py-12 gap-4 text-center">
+              <div class="w-14 h-14 rounded-full bg-[#EBF3FF] flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1A4FAB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/>
                   <circle cx="12" cy="10" r="3"/>
                 </svg>
-                <p class="font-medium">Enter a suburb or use your location<br>to find nearby support</p>
+              </div>
+              <div>
+                <p class="text-[#1A1A1A] font-semibold text-sm mb-1">No location selected</p>
+                <p class="text-[#5A7A9B] text-xs leading-relaxed">Search a suburb or tap<br>Use My Location above.</p>
               </div>
             </div>
 
           </div>
         </div>
-      </div>
 
-      <!-- Healthdirect footer -->
-      <div class="mt-12 bg-gradient-to-br from-[#007aff]/10 to-[#5ac8fa]/10 rounded-3xl p-8 border border-[#007aff]/30">
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div class="flex-1 text-center sm:text-left">
-            <h3 class="text-2xl font-semibold text-[#1d1d1f] mb-3">Can't Find Nearby Support?</h3>
-            <p class="text-[#86868b] text-lg">
-              Call Healthdirect for 24/7 health advice and help finding local services
-            </p>
+      </div><!-- end rounded map wrapper -->
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+      FOOTER CTA
+    ══════════════════════════════════════════════════════════════════════════ -->
+    <section style="background:#0A1628;" class="py-12">
+      <div class="max-w-[1200px] mx-auto px-10">
+
+        <a href="tel:1800022222" class="block">
+          <div class="bg-[#1A4FAB] hover:bg-[#1440A0] transition-colors rounded-3xl px-10 py-8 flex flex-col sm:flex-row items-center justify-between gap-6 group">
+            <div class="flex items-center gap-6">
+              <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-white mb-1">Can't find a nearby clinic? Call Healthdirect.</h3>
+                <p class="text-white/70 text-sm">Free 24/7 health advice — a nurse or GP will help you find local support after a concussion.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 text-white font-bold text-lg whitespace-nowrap flex-shrink-0">
+              <span>1800 022 222</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:translate-x-1 transition-transform"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </div>
           </div>
-          <a href="tel:1800022222">
-            <button class="inline-flex items-center gap-2 bg-[#007aff] hover:bg-[#0051d5] text-white
-                           px-10 py-4 text-lg rounded-full font-semibold shadow-lg shadow-blue-500/25
-                           transition-all hover:scale-105">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6
-                         19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72
-                         12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6
-                         l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-              </svg>
-              Call 1800 022 222
-            </button>
-          </a>
-        </div>
-      </div>
+        </a>
 
-    </div>
+        <p class="text-center text-white/30 text-xs mt-6">Clinic data sourced from Google Places API · Always verify opening hours before visiting</p>
+      </div>
+    </section>
+
   </div>
 </template>
 
 
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+
+/* ━━ TRANSITIONS ━━ */
+.fade-up-enter-active { transition: opacity 0.4s ease, transform 0.4s ease; }
+.fade-up-leave-active { transition: opacity 0.2s ease; }
+.fade-up-enter-from   { opacity: 0; transform: translateY(14px); }
+.fade-up-leave-to     { opacity: 0; }
+
+/* ━━ HERO ━━ */
+.fs-hero {
+  position: relative;
+  background: #07090e;
+  overflow: hidden;
+  min-height: 520px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.fs-hero-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(48px, 8vw, 96px);
+  line-height: 1.02;
+  letter-spacing: 2px;
+}
+
+/* Diagonal speed lines */
+.fs-hero-lines {
+  position: absolute; inset: 0;
+  overflow: hidden; pointer-events: none; z-index: 1;
+}
+.fs-hero-lines::before {
+  content: '';
+  position: absolute; top: -200%; left: -50%; width: 200%; height: 400%;
+  background-image: repeating-linear-gradient(
+    -65deg, transparent, transparent 80px,
+    rgba(56,191,255,0.025) 80px, rgba(56,191,255,0.025) 81px
+  );
+  animation: fsLinesDrift 22s linear infinite;
+}
+@keyframes fsLinesDrift {
+  from { transform: translateX(0); }
+  to   { transform: translateX(81px); }
+}
+
+/* Left ice-blue edge bar */
+.fs-hero-edge {
+  position: absolute; left: 0; top: 15%; bottom: 15%;
+  width: 3px; z-index: 2;
+  background: linear-gradient(to bottom, transparent, #38bfff 40%, #38bfff 60%, transparent);
+}
+
+/* ━━ EKG ━━ */
+.fs-ekg {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  z-index: 2; height: 56px; overflow: hidden; opacity: 0.18;
+}
+.fs-ekg-svg {
+  width: 200%; height: 100%;
+  animation: fsEkgScroll 3s linear infinite;
+}
+@keyframes fsEkgScroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ━━ RANGE SLIDER ━━ */
+.fs-range {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  height: 6px;
+}
+.fs-range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 9999px;
+  background: #EBEBEB;
+}
+.fs-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: #1A4FAB;
+  border: 3px solid white;
+  box-shadow: 0 1px 6px rgba(26,79,171,0.4);
+  margin-top: -8px;
+  cursor: pointer;
+  transition: box-shadow 0.15s;
+}
+.fs-range::-webkit-slider-thumb:hover { box-shadow: 0 2px 10px rgba(26,79,171,0.55); }
+.fs-range::-moz-range-thumb {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: #1A4FAB;
+  border: 3px solid white;
+  box-shadow: 0 1px 6px rgba(26,79,171,0.4);
+  cursor: pointer;
+}
+.fs-range::-moz-range-track { height: 4px; border-radius: 9999px; background: #EBEBEB; }
+</style>
+
 <style>
-/* Mapbox popup — strip default styles so our custom HTML shows cleanly */
+/* Mapbox popup — strip default styles */
 .concovery-popup .mapboxgl-popup-content {
   background: transparent !important;
   padding: 0 !important;
@@ -878,47 +842,4 @@ onUnmounted(() => {
   transition: transform 0.15s ease;
 }
 .map-pin:hover { transform: scale(1.12); }
-
-/* Range slider — styled consistently across Chrome and Firefox */
-input[type="range"] {
-  -webkit-appearance: none;
-  appearance: none;
-  background: transparent;
-  height: 6px;
-}
-input[type="range"]::-webkit-slider-runnable-track {
-  height: 4px;
-  border-radius: 9999px;
-  background: #e5e7eb;
-}
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #007aff;
-  border: 3px solid white;
-  box-shadow: 0 1px 6px rgba(0,122,255,0.45);
-  margin-top: -8px;
-  cursor: pointer;
-  transition: box-shadow 0.15s;
-}
-input[type="range"]::-webkit-slider-thumb:hover {
-  box-shadow: 0 2px 10px rgba(0,122,255,0.60);
-}
-input[type="range"]::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #007aff;
-  border: 3px solid white;
-  box-shadow: 0 1px 6px rgba(0,122,255,0.45);
-  cursor: pointer;
-}
-input[type="range"]::-moz-range-track {
-  height: 4px;
-  border-radius: 9999px;
-  background: #e5e7eb;
-}
 </style>
