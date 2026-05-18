@@ -14,17 +14,19 @@ import BlurReveal from '@/components/ui/blur-reveal/BlurReveal.vue'
         <div class="res-hero-edge"></div>
 
         <div class="w-full py-24 relative z-10" style="padding-left:80px; padding-right:80px;">
-          <div class="inline-flex items-center border border-white/20 rounded-full px-4 py-1.5 mb-6">
-            <span class="w-1.5 h-1.5 rounded-full bg-[#38bfff] mr-2 animate-pulse"></span>
-            <span class="text-white/50 text-xs font-medium tracking-widest uppercase">Resources</span>
-          </div>
-          <h1 class="res-hero-title text-white mb-6">
-            TRUSTED<br>
-            <span style="color:#38bfff;">RESOURCES.</span>
-          </h1>
-          <p class="text-white/55 text-lg font-light max-w-lg leading-relaxed">
-            Evidence-based resources from leading Australian health and sports organisations. Everything here is verified and endorsed.
-          </p>
+          <BlurReveal :delay="0.1" :duration="0.75">
+            <div class="inline-flex items-center border border-white/20 rounded-full px-4 py-1.5 mb-6">
+              <span class="w-1.5 h-1.5 rounded-full bg-[#38bfff] mr-2 animate-pulse"></span>
+              <span class="text-white/50 text-xs font-medium tracking-widest uppercase">Resources</span>
+            </div>
+            <h1 class="res-hero-title text-white mb-6">
+              TRUSTED<br>
+              <span style="color:#38bfff;">RESOURCES.</span>
+            </h1>
+            <p class="text-white/55 text-lg font-light max-w-lg leading-relaxed">
+              Evidence-based resources from leading Australian health and sports organisations. Everything here is verified and endorsed.
+            </p>
+          </BlurReveal>
         </div>
 
         <!-- EKG heartbeat line -->
