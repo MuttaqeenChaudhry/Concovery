@@ -832,7 +832,7 @@ body.light {
 .hero-inner {
   position: relative; z-index: 3;
   width: 100%; max-width: 1200px;
-  margin: 0 auto;
+  margin: 0px;
   padding: 0 80px;
   display: flex;
   align-items: center;
@@ -851,8 +851,8 @@ body.light {
 
 /* Athlete image — right side, mirrored so they face inward */
 .hero-image-wrap {
-  position: fixed;
-  right: 0;
+  position: absolute;
+  right: -309px;
   top: 0;
   bottom: 0;
   width: 48%;
