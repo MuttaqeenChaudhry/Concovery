@@ -712,7 +712,7 @@ onMounted(async () => {
     <!-- ══════════════════════════════════════════════════════════════════════
       BEAT 3 — WHO GETS HURT MOST
     ══════════════════════════════════════════════════════════════════════════ -->
-    <section class="bg-white py-24">
+    <section class="py-24" style="background: linear-gradient(135deg, #F0F7FF 0%, #DEF0FF 40%, #EBF3FF 70%, #F5F9FF 100%);">
       <div class="max-w-[1200px] mx-auto px-10">
 
         <div class="text-center mb-14">
@@ -873,7 +873,7 @@ onMounted(async () => {
     <!-- ══════════════════════════════════════════════════════════════════════
       BEAT 4 — THIS IS WHY THE RULES EXIST
     ══════════════════════════════════════════════════════════════════════════ -->
-    <section class="bg-[#F7F9FC] py-24">
+    <section class="py-24" style="background: linear-gradient(180deg, #EBF3FF 0%, #D6EAFF 35%, #E8F2FF 65%, #F0F6FF 100%);">
       <div class="max-w-[1200px] mx-auto px-10">
 
         <div class="text-center mb-12">
@@ -936,7 +936,7 @@ onMounted(async () => {
     <!-- ══════════════════════════════════════════════════════════════════════
       BEAT 5 — BRAIN SCIENCE
     ══════════════════════════════════════════════════════════════════════════ -->
-    <section class="bg-white py-24">
+    <section class="py-24" style="background: linear-gradient(145deg, #F5F9FF 0%, #E8F2FF 30%, #D8ECFF 55%, #EBF3FF 100%);">
       <div class="max-w-[1200px] mx-auto px-10">
 
         <div class="text-center mb-14">
