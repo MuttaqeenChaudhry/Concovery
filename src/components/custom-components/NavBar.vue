@@ -60,12 +60,12 @@ function toggleTheme() {
 
           <!-- Dark / Light toggle -->
           <div class="theme-toggle" @click="toggleTheme">
-            <span class="toggle-label">{{ isDark ? 'Dark' : 'Light' }}</span>
-            <div class="toggle-track" :class="{ 'toggle-track-light': !isDark }">
-              <span class="toggle-icon toggle-icon-moon">🌙</span>
-              <span class="toggle-icon toggle-icon-sun">☀️</span>
-              <div class="toggle-thumb" :class="{ 'toggle-thumb-right': !isDark }" />
-            </div>
+  <span class="toggle-label">{{ isDark ? 'Dark' : 'Light' }}</span>
+  <span class="toggle-emoji">{{ isDark ? '☀️' : '🌙' }}</span>
+  <div class="toggle-track" :class="{ 'toggle-track-light': !isDark }">
+    <div class="toggle-thumb" :class="{ 'toggle-thumb-right': !isDark }" />
+  </div>
+</div>
           </div>
 
         </div>
@@ -127,7 +127,7 @@ function toggleTheme() {
         </div>
       </div>
 
-    </div>
+
   </nav>
 </template>
 
@@ -222,10 +222,12 @@ function toggleTheme() {
   pointer-events: none;
   transition: opacity 0.2s;
 }
-.toggle-icon-moon { left: 5px;  opacity: 1; }
-.toggle-icon-sun  { right: 5px; opacity: 0; }
-.toggle-track-light .toggle-icon-moon { opacity: 0; }
-.toggle-track-light .toggle-icon-sun  { opacity: 1; }
+
+.toggle-emoji {
+  font-size: 14px;
+  line-height: 1;
+}
+
 
 .toggle-thumb {
   position: absolute;
