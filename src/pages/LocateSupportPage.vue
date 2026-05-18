@@ -513,273 +513,158 @@ onUnmounted(() => {
       </div>
     </section>
 
-    <!-- ══════════════════════════════════════════════════════════════════════
-      STATS STRIP
-    ══════════════════════════════════════════════════════════════════════════ -->
-    <section class="fs-stats-section">
-      <div class="max-w-[1200px] mx-auto px-10">
-        <div class="fs-stats-grid">
-          <div class="fs-stat-card">
-            <span class="fs-stat-big" style="color:#C62828;">000</span>
-            <span class="fs-stat-title">Life-threatening symptoms</span>
-            <span class="fs-stat-desc">Seizures, unconsciousness, slurred speech or severe vomiting — call 000 immediately, do not use this tool.</span>
-          </div>
-          <div class="fs-stat-card">
-            <span class="fs-stat-big" style="color:#38bfff;">24 hrs</span>
-            <span class="fs-stat-title">See a doctor within</span>
-            <span class="fs-stat-desc">The AIS 2024 protocol requires a same-day GP or sports medicine assessment after any suspected concussion.</span>
-          </div>
-          <div class="fs-stat-card">
-            <span class="fs-stat-big">4 types</span>
-            <span class="fs-stat-title">Of providers shown</span>
-            <span class="fs-stat-desc">GPs, sports medicine clinics, hospitals and physiotherapists — all colour-coded on the map.</span>
-          </div>
-        </div>
-      </div>
-    </section>
+
+
+
 
     <!-- ══════════════════════════════════════════════════════════════════════
-      EMERGENCY BANNER
+      FULL-SCREEN MAP WITH FLOATING PANEL
     ══════════════════════════════════════════════════════════════════════════ -->
-    <section class="py-10" style="background:#EBF3FF;">
-      <div class="max-w-[1200px] mx-auto px-10">
-        <div class="bg-[#0A1628] rounded-3xl p-8 relative overflow-hidden">
+    <section class="relative" style="height:calc(100vh - 80px); min-height:680px;">
 
-          <!-- Dot grid -->
-          <div class="absolute inset-0 opacity-[0.04] pointer-events-none">
-            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-              <pattern id="fs-dots" width="20" height="20" patternUnits="userSpaceOnUse">
-                <circle cx="2" cy="2" r="1" fill="white"/>
-              </pattern>
-              <rect width="100%" height="100%" fill="url(#fs-dots)"/>
-            </svg>
+      <!-- Map fills 100% of the section -->
+      <div ref="mapDiv" style="width:100%;height:100%;" />
+
+      <!-- Floating panel — overlays on left, contains search + results -->
+      <div class="absolute top-5 left-5 bottom-5 z-20 flex flex-col rounded-3xl overflow-hidden shadow-2xl" style="width:420px; background: rgba(255,255,255,0.96); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
+
+        <!-- ── Panel top: label + search ── -->
+        <div class="flex-shrink-0 px-6 pt-6 pb-4">
+
+          <!-- Label row -->
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-[#1A4FAB] text-xs font-bold tracking-widest uppercase">Locate Support</span>
+            <span v-if="shownResults" class="text-xs text-[#5A7A9B] font-medium bg-[#EBF3FF] px-3 py-1 rounded-full">
+              {{ shownResults.length }} found
+            </span>
           </div>
 
-          <!-- Red glow blob -->
-          <div class="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl opacity-15 pointer-events-none" style="background:#C62828; transform: translate(20%, -30%);"/>
-
-          <div class="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-8">
-            <div class="w-16 h-16 rounded-2xl bg-[#C62828]/20 border border-[#C62828]/40 flex items-center justify-center flex-shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
-                <line x1="12" y1="9" x2="12" y2="13"/>
-                <line x1="12" y1="17" x2="12.01" y2="17"/>
-              </svg>
+          <!-- Search input -->
+          <div class="relative mb-3">
+            <div class="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5A7A9B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             </div>
-            <div class="flex-1">
-              <h2 class="text-2xl font-bold text-white mb-2">Severe symptoms? Do not use this tool. Call 000.</h2>
-              <p class="text-white/60 text-base leading-relaxed">
-                Seizures, loss of consciousness, vomiting, severe headache, slurred speech or unusual behaviour after a head knock are emergency symptoms. Go straight to the nearest emergency department or call triple zero.
-              </p>
-            </div>
-            <a href="tel:000" class="flex-shrink-0">
-              <button class="inline-flex items-center gap-3 bg-[#C62828] hover:bg-[#B71C1C] text-white px-8 py-4 rounded-2xl font-bold text-lg transition-colors shadow-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-                </svg>
-                Call 000
-              </button>
-            </a>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ══════════════════════════════════════════════════════════════════════
-      SEARCH + MAP SECTION
-    ══════════════════════════════════════════════════════════════════════════ -->
-    <section class="py-16" style="background: linear-gradient(160deg, #EBF3FF 0%, #DEF0FF 50%, #EBF3FF 100%);">
-      <div class="max-w-[1200px] mx-auto px-10">
-
-        <!-- Section label -->
-        <div class="mb-3">
-          <span class="text-[#1A4FAB] text-xs font-semibold tracking-widest uppercase">Search</span>
-        </div>
-        <div class="flex flex-col lg:flex-row lg:items-end justify-between mb-10 gap-4">
-          <h2 class="text-4xl font-bold text-[#1A1A1A] tracking-tight">Where are you located?</h2>
-          <span class="text-[#5A7A9B] text-xs">Powered by Google Places</span>
-        </div>
-
-        <!-- Search card -->
-        <div class="bg-white rounded-3xl p-8 shadow-sm border border-[#EBEBEB] mb-8">
-
-          <div class="flex flex-col sm:flex-row gap-4">
-
-            <!-- Address input with autocomplete -->
-            <div class="flex-1 relative">
-              <div class="absolute left-5 top-1/2 -translate-y-1/2 pointer-events-none">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5A7A9B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-              </div>
-              <input
-                type="text"
-                placeholder="Enter your suburb or postcode..."
-                v-model="userInput"
-                @keyup="fetchAddressPredictions"
-                class="w-full bg-white border-2 border-[#EBEBEB] rounded-2xl pl-12 pr-6 py-5 text-[#1A1A1A] text-base font-medium focus:outline-none focus:border-[#1A4FAB] transition-colors"
-              />
-              <ul
-                v-if="fetchedPredictions"
-                class="absolute top-full left-0 z-50 w-full shadow-xl bg-white rounded-2xl mt-2 overflow-hidden border border-[#EBEBEB]"
-              >
-                <li
-                  v-for="prediction in fetchedPredictions"
-                  :key="prediction.description"
-                  @click="selectPrediction(prediction.description)"
-                  class="flex items-center gap-3 px-6 py-3.5 border-b border-[#F7F9FC] hover:bg-[#EBF3FF] cursor-pointer text-[#1A1A1A] text-sm font-medium transition-colors last:border-0"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1A4FAB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
-                  {{ prediction.description }}
-                </li>
-              </ul>
-            </div>
-
-            <button
-              @click="useMyLocation"
-              :disabled="isLocating"
-              class="inline-flex items-center justify-center gap-2 bg-[#1A4FAB] hover:bg-[#1440A0] text-white px-8 py-5 rounded-2xl font-semibold whitespace-nowrap transition-colors disabled:opacity-50 disabled:pointer-events-none shadow-sm"
+            <input
+              type="text"
+              placeholder="Suburb or postcode..."
+              v-model="userInput"
+              @keyup="fetchAddressPredictions"
+              class="w-full bg-[#F7F9FC] border-2 border-[#EBEBEB] rounded-2xl pl-10 pr-4 py-3.5 text-[#1A1A1A] text-sm font-medium focus:outline-none focus:border-[#1A4FAB] focus:bg-white transition-colors"
+            />
+            <!-- Autocomplete dropdown -->
+            <ul
+              v-if="fetchedPredictions"
+              class="absolute top-full left-0 z-50 w-full shadow-xl bg-white rounded-2xl mt-1.5 overflow-hidden border border-[#EBEBEB]"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/>
-                <circle cx="12" cy="10" r="3"/>
-              </svg>
-              {{ isLocating ? 'Locating...' : 'Use My Location' }}
-            </button>
+              <li
+                v-for="prediction in fetchedPredictions"
+                :key="prediction.description"
+                @click="selectPrediction(prediction.description)"
+                class="flex items-center gap-3 px-4 py-3 border-b border-[#F7F9FC] hover:bg-[#EBF3FF] cursor-pointer text-[#1A1A1A] text-sm font-medium transition-colors last:border-0"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1A4FAB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+                {{ prediction.description }}
+              </li>
+            </ul>
           </div>
 
-          <!-- Colour legend — visible once results are loaded -->
-          <div v-if="shownResults" class="flex flex-wrap gap-5 mt-6 pt-6 border-t border-[#EBEBEB]">
-            <div v-for="(colour, type) in CLINIC_COLOURS" :key="type" class="flex items-center gap-2">
-              <div class="w-3 h-3 rounded-full flex-shrink-0" :style="{ background: colour }"/>
-              <span class="text-sm text-[#5A7A9B] font-medium">{{ type }}</span>
+          <!-- Use My Location button -->
+          <button
+            @click="useMyLocation"
+            :disabled="isLocating"
+            class="w-full inline-flex items-center justify-center gap-2 bg-[#1A4FAB] hover:bg-[#1440A0] text-white px-4 py-3.5 rounded-2xl font-semibold text-sm transition-colors disabled:opacity-50 disabled:pointer-events-none"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+            {{ isLocating ? 'Locating...' : 'Use My Location' }}
+          </button>
+
+          <!-- Error -->
+          <div v-if="errors.general" class="mt-3 flex items-center gap-2 bg-[#FFF5F5] border border-[#C62828]/20 rounded-xl px-4 py-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C62828" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span class="text-[#C62828] text-xs font-medium">{{ errors.general }}</span>
+          </div>
+
+          <!-- Legend — appears once results are loaded -->
+          <div v-if="shownResults" class="flex flex-wrap gap-3 mt-4 pt-4 border-t border-[#EBEBEB]">
+            <div v-for="(colour, type) in CLINIC_COLOURS" :key="type" class="flex items-center gap-1.5">
+              <div class="w-2.5 h-2.5 rounded-full flex-shrink-0" :style="{ background: colour }"/>
+              <span class="text-xs text-[#5A7A9B] font-medium">{{ type }}</span>
             </div>
-          </div>
-
-          <!-- Error message -->
-          <div v-if="errors.general" class="mt-4 flex items-center gap-3 bg-[#FFF5F5] border border-[#C62828]/20 rounded-2xl px-5 py-4">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C62828" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <span class="text-[#C62828] text-sm font-medium">{{ errors.general }}</span>
           </div>
         </div>
 
-        <!-- Map + results grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Divider -->
+        <div class="h-px bg-[#EBEBEB] flex-shrink-0 mx-4"/>
 
-          <!-- Map panel -->
-          <div class="bg-white rounded-3xl overflow-hidden shadow-xl border border-[#EBEBEB]">
+        <!-- ── Scrollable results ── -->
+        <div class="flex-1 overflow-y-auto px-4 py-4">
+          <div class="space-y-2">
 
-            <!-- Map header -->
-            <div class="px-6 py-4 border-b border-[#EBEBEB] flex items-center justify-between" style="background:#F7F9FC;">
-              <h3 class="text-base font-semibold text-[#1A1A1A] flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A4FAB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Loading -->
+            <div v-if="isLoading" class="flex flex-col space-y-2">
+              <SuggestionCardSkeleton/>
+              <SuggestionCardSkeleton/>
+              <SuggestionCardSkeleton/>
+            </div>
+
+            <!-- Results -->
+            <template v-else-if="shownResults">
+              <div v-if="shownResults.length === 0" class="flex flex-col items-center gap-3 py-12 text-center">
+                <div class="w-12 h-12 rounded-full bg-[#EBF3FF] flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1A4FAB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                </div>
+                <p class="text-[#5A7A9B] text-sm">No providers found in this area.</p>
+              </div>
+
+              <div
+                v-else
+                v-for="(place, index) in shownResults"
+                :key="place.name"
+                :id="`card-${index}`"
+                class="rounded-2xl transition-all duration-200 cursor-pointer bg-white"
+                :class="selectedCardIndex === index
+                  ? 'border-2 border-[#1A4FAB] shadow-md shadow-blue-500/15'
+                  : 'border border-[#EBEBEB] hover:border-[#1A4FAB]/30 hover:shadow-sm'"
+                @click="selectCard(index)"
+              >
+                <div class="relative">
+                  <div
+                    class="absolute top-3 right-3 z-10 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm transition-colors"
+                    :style="{ background: selectedCardIndex === index ? '#1A4FAB' : '#9ca3af' }"
+                  >{{ index + 1 }}</div>
+                  <SuggestionCard
+                    :location-type="place.locationType"
+                    :is-open="place.isOpen"
+                    :name="place.name"
+                    :address="place.address"
+                    :contact="place.phoneNo"
+                    :distance="place.distance"
+                    @get-directions="() => openDirections(place, index)"
+                  />
+                </div>
+              </div>
+            </template>
+
+            <!-- Pre-search empty state -->
+            <div v-else class="flex flex-col items-center justify-center py-12 gap-4 text-center">
+              <div class="w-14 h-14 rounded-full bg-[#EBF3FF] flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1A4FAB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/>
                   <circle cx="12" cy="10" r="3"/>
                 </svg>
-                Nearby Providers
-              </h3>
-              <span class="text-xs text-[#5A7A9B] font-medium">
-                <template v-if="shownResults">
-                  {{ shownResults.length }} of {{ allResults?.length ?? 0 }} within {{ radiusKm }} km
-                </template>
-                <template v-else>Melbourne, VIC</template>
-              </span>
-            </div>
-
-            <!-- Map canvas -->
-            <div class="relative">
-              <div ref="mapDiv" style="width:100%;height:540px;" />
-
-              <!-- Radius slider -->
-              <div class="absolute bottom-5 left-4 right-4 z-10 bg-white/90 backdrop-blur-md rounded-2xl px-5 py-3 shadow-lg border border-[#EBEBEB]/80">
-                <div class="flex items-center gap-3">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1A4FAB" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0">
-                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                  </svg>
-                  <span class="text-xs font-semibold text-[#1A1A1A] whitespace-nowrap flex-shrink-0">Search radius</span>
-                  <input
-                    type="range" min="1" max="20" step="1"
-                    v-model.number="radiusKm"
-                    @input="applyRadiusFilter"
-                    class="flex-1 cursor-pointer fs-range"
-                  />
-                  <span class="text-sm font-bold text-[#1A4FAB] w-14 text-right flex-shrink-0">{{ radiusKm }} km</span>
-                </div>
-                <div class="flex justify-between mt-1 px-5">
-                  <span class="text-[10px] text-[#5A7A9B]">1 km</span>
-                  <span class="text-[10px] text-[#5A7A9B]">20 km</span>
-                </div>
+              </div>
+              <div>
+                <p class="text-[#1A1A1A] font-semibold text-sm mb-1">No location selected</p>
+                <p class="text-[#5A7A9B] text-xs leading-relaxed">Search a suburb or tap<br>Use My Location above.</p>
               </div>
             </div>
-          </div>
 
-          <!-- Results list -->
-          <div class="max-h-[640px] overflow-y-auto overflow-x-visible px-1 py-1">
-            <div class="space-y-2">
-
-              <!-- Loading skeletons -->
-              <div v-if="isLoading" class="flex flex-col space-y-2">
-                <SuggestionCardSkeleton/>
-                <SuggestionCardSkeleton/>
-                <SuggestionCardSkeleton/>
-              </div>
-
-              <!-- Results -->
-              <template v-else-if="shownResults">
-
-                <!-- Empty radius state -->
-                <div v-if="shownResults.length === 0" class="flex flex-col items-center gap-4 py-16 text-center">
-                  <div class="w-16 h-16 rounded-full bg-[#EBF3FF] flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1A4FAB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                  </div>
-                  <p class="text-[#5A7A9B] font-medium text-sm">No providers within {{ radiusKm }} km.<br>Try increasing the search radius above.</p>
-                </div>
-
-                <!-- Individual result cards -->
-                <div
-                  v-else
-                  v-for="(place, index) in shownResults"
-                  :key="place.name"
-                  :id="`card-${index}`"
-                  class="rounded-2xl transition-all duration-200 cursor-pointer bg-white"
-                  :class="selectedCardIndex === index
-                    ? 'border-2 border-[#1A4FAB] shadow-lg shadow-blue-500/15 scale-[1.01]'
-                    : 'border border-[#EBEBEB] hover:border-[#1A4FAB]/30 hover:shadow-sm'"
-                  @click="selectCard(index)"
-                >
-                  <div class="relative">
-                    <div
-                      class="absolute top-3 right-3 z-10 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm transition-colors"
-                      :style="{ background: selectedCardIndex === index ? '#1A4FAB' : '#9ca3af' }"
-                    >{{ index + 1 }}</div>
-                    <SuggestionCard
-                      :location-type="place.locationType"
-                      :is-open="place.isOpen"
-                      :name="place.name"
-                      :address="place.address"
-                      :contact="place.phoneNo"
-                      :distance="place.distance"
-                      @get-directions="() => openDirections(place, index)"
-                    />
-                  </div>
-                </div>
-              </template>
-
-              <!-- Pre-search empty state -->
-              <div v-else class="flex flex-col items-center justify-center py-20 gap-5 text-center">
-                <div class="w-20 h-20 rounded-full bg-[#EBF3FF] flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#1A4FAB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/>
-                    <circle cx="12" cy="10" r="3"/>
-                  </svg>
-                </div>
-                <div>
-                  <p class="text-[#1A1A1A] font-semibold mb-1">No location selected yet</p>
-                  <p class="text-[#5A7A9B] text-sm">Enter a suburb above or tap Use My Location<br>to find clinics and GPs near you.</p>
-                </div>
-              </div>
-
-            </div>
           </div>
         </div>
+
       </div>
     </section>
 
@@ -899,21 +784,6 @@ onUnmounted(() => {
   from { transform: translateX(0); }
   to   { transform: translateX(-50%); }
 }
-
-/* ━━ STATS SECTION ━━ */
-.fs-stats-section { background: #e8f3ff; padding: 40px 0; }
-.fs-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2px;
-  background: rgba(56,191,255,0.1);
-  border-radius: 24px;
-  overflow: hidden;
-}
-.fs-stat-card { background: #e8f3ff; display: flex; flex-direction: column; padding: 28px 40px; gap: 6px; }
-.fs-stat-big  { font-family: 'Bebas Neue', sans-serif; font-size: clamp(52px, 6vw, 80px); color: #0a1628; line-height: 1; letter-spacing: 1px; }
-.fs-stat-title { font-size: 15px; font-weight: 700; color: #1A1A1A; }
-.fs-stat-desc  { font-size: 13px; color: #5A7A9B; line-height: 1.6; max-width: 260px; }
 
 /* ━━ RANGE SLIDER ━━ */
 .fs-range {
