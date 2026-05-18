@@ -484,17 +484,19 @@ onUnmounted(() => {
       <div class="fs-hero-edge"></div>
 
       <div class="w-full py-24 relative z-10" style="padding-left:80px; padding-right:80px;">
-        <div class="inline-flex items-center border border-white/20 rounded-full px-4 py-1.5 mb-6">
-          <span class="w-1.5 h-1.5 rounded-full bg-[#38bfff] mr-2 animate-pulse"></span>
-          <span class="text-white/50 text-xs font-medium tracking-widest uppercase">Locate Support</span>
-        </div>
-        <h1 class="fs-hero-title text-white mb-6">
-          FIND THE RIGHT<br>
-          HELP <span style="color:#38bfff;">NEAR YOU.</span>
-        </h1>
-        <p class="text-white/55 text-lg font-light max-w-lg leading-relaxed">
-          A concussion needs a real doctor, not a search engine. Use this tool to find GPs, sports medicine clinics and hospitals within reach, before you need them in a hurry.
-        </p>
+        <BlurReveal :delay="0.1" :duration="0.75">
+          <div class="inline-flex items-center border border-white/20 rounded-full px-4 py-1.5 mb-6">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#38bfff] mr-2 animate-pulse"></span>
+            <span class="text-white/50 text-xs font-medium tracking-widest uppercase">Locate Support</span>
+          </div>
+          <h1 class="fs-hero-title text-white mb-6">
+            FIND THE RIGHT<br>
+            HELP <span style="color:#38bfff;">NEAR YOU.</span>
+          </h1>
+          <p class="text-white/55 text-lg font-light max-w-lg leading-relaxed">
+            A concussion needs a real doctor, not a search engine. Use this tool to find GPs, sports medicine clinics and hospitals within reach — before you need them in a hurry.
+          </p>
+        </BlurReveal>
       </div>
 
       <!-- EKG heartbeat line -->
