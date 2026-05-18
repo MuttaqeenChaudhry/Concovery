@@ -52,6 +52,13 @@ function getRegionOpacity(id) {
   return selectedRegion.value === id ? 1 : 0.4
 }
 
+// Text inside brain regions flips to white when that region is active
+// so it stays legible against the dark blue fill
+function getRegionTextFill(id) {
+  const isActive = hoveredRegion.value === id || selectedRegion.value === id
+  return isActive ? '#ffffff' : '#1A1A1A'
+}
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // DROPDOWN AND FILTER STATE
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -946,33 +953,33 @@ onMounted(async () => {
               <path d="M 200 40 Q 290 40 340 120 Q 360 180 350 240 L 350 280 Q 355 320 340 360 Q 320 400 280 420 L 260 460 Q 240 510 200 530 Q 160 510 140 460 L 120 420 Q 80 400 60 360 Q 45 320 50 280 L 50 240 Q 40 180 60 120 Q 110 40 200 40 Z" fill="white" stroke="#EBEBEB" stroke-width="2"/>
               <g @click="selectRegion('frontal')" @mouseenter="hoveredRegion = 'frontal'" @mouseleave="hoveredRegion = null" class="cursor-pointer">
                 <path d="M 200 60 Q 280 60 320 140 L 280 180 L 220 200 L 180 200 L 120 180 L 80 140 Q 120 60 200 60" :fill="getRegionFill('frontal')" :stroke="selectedRegion === 'frontal' || hoveredRegion === 'frontal' ? '#1A4FAB' : '#EBEBEB'" stroke-width="2" :opacity="getRegionOpacity('frontal')" style="transition:all 0.25s ease"/>
-                <text x="200" y="138" text-anchor="middle" fill="#1A1A1A" font-size="14" font-weight="600" class="pointer-events-none" font-family="sans-serif">Frontal Lobe</text>
+                <text x="200" y="138" text-anchor="middle" :fill="getRegionTextFill('frontal')" font-size="14" font-weight="600" class="pointer-events-none" font-family="sans-serif" style="transition: fill 0.25s ease;">Frontal Lobe</text>
               </g>
               <g @click="selectRegion('parietal')" @mouseenter="hoveredRegion = 'parietal'" @mouseleave="hoveredRegion = null" class="cursor-pointer">
                 <path d="M 180 200 L 220 200 L 280 180 L 320 220 L 300 280 L 220 300 L 180 300 L 100 280 L 80 220 L 120 180 Z" :fill="getRegionFill('parietal')" :stroke="selectedRegion === 'parietal' || hoveredRegion === 'parietal' ? '#1A4FAB' : '#EBEBEB'" stroke-width="2" :opacity="getRegionOpacity('parietal')" style="transition:all 0.25s ease"/>
-                <text x="200" y="250" text-anchor="middle" fill="#1A1A1A" font-size="14" font-weight="600" class="pointer-events-none" font-family="sans-serif">Parietal Lobe</text>
+                <text x="200" y="250" text-anchor="middle" :fill="getRegionTextFill('parietal')" font-size="14" font-weight="600" class="pointer-events-none" font-family="sans-serif" style="transition: fill 0.25s ease;">Parietal Lobe</text>
               </g>
               <g @click="selectRegion('temporal')" @mouseenter="hoveredRegion = 'temporal'" @mouseleave="hoveredRegion = null" class="cursor-pointer">
                 <ellipse cx="90" cy="260" rx="50" ry="65" :fill="getRegionFill('temporal')" :stroke="selectedRegion === 'temporal' || hoveredRegion === 'temporal' ? '#1A4FAB' : '#EBEBEB'" stroke-width="2" :opacity="getRegionOpacity('temporal')" style="transition:all 0.25s ease"/>
-                <text x="90" y="253" text-anchor="middle" fill="#1A1A1A" font-size="13" font-weight="600" class="pointer-events-none" font-family="sans-serif">Temporal</text>
-                <text x="90" y="270" text-anchor="middle" fill="#1A1A1A" font-size="13" font-weight="600" class="pointer-events-none" font-family="sans-serif">Lobe</text>
+                <text x="90" y="253" text-anchor="middle" :fill="getRegionTextFill('temporal')" font-size="13" font-weight="600" class="pointer-events-none" font-family="sans-serif" style="transition: fill 0.25s ease;">Temporal</text>
+                <text x="90" y="270" text-anchor="middle" :fill="getRegionTextFill('temporal')" font-size="13" font-weight="600" class="pointer-events-none" font-family="sans-serif" style="transition: fill 0.25s ease;">Lobe</text>
               </g>
               <g @click="selectRegion('temporal')" @mouseenter="hoveredRegion = 'temporal'" @mouseleave="hoveredRegion = null" class="cursor-pointer">
                 <ellipse cx="310" cy="260" rx="50" ry="65" :fill="getRegionFill('temporal')" :stroke="selectedRegion === 'temporal' || hoveredRegion === 'temporal' ? '#1A4FAB' : '#EBEBEB'" stroke-width="2" :opacity="getRegionOpacity('temporal')" style="transition:all 0.25s ease"/>
-                <text x="310" y="253" text-anchor="middle" fill="#1A1A1A" font-size="13" font-weight="600" class="pointer-events-none" font-family="sans-serif">Temporal</text>
-                <text x="310" y="270" text-anchor="middle" fill="#1A1A1A" font-size="13" font-weight="600" class="pointer-events-none" font-family="sans-serif">Lobe</text>
+                <text x="310" y="253" text-anchor="middle" :fill="getRegionTextFill('temporal')" font-size="13" font-weight="600" class="pointer-events-none" font-family="sans-serif" style="transition: fill 0.25s ease;">Temporal</text>
+                <text x="310" y="270" text-anchor="middle" :fill="getRegionTextFill('temporal')" font-size="13" font-weight="600" class="pointer-events-none" font-family="sans-serif" style="transition: fill 0.25s ease;">Lobe</text>
               </g>
               <g @click="selectRegion('occipital')" @mouseenter="hoveredRegion = 'occipital'" @mouseleave="hoveredRegion = null" class="cursor-pointer">
                 <path d="M 180 300 L 220 300 L 260 340 L 240 380 L 200 395 L 160 380 L 140 340 Z" :fill="getRegionFill('occipital')" :stroke="selectedRegion === 'occipital' || hoveredRegion === 'occipital' ? '#1A4FAB' : '#EBEBEB'" stroke-width="2" :opacity="getRegionOpacity('occipital')" style="transition:all 0.25s ease"/>
-                <text x="200" y="353" text-anchor="middle" fill="#1A1A1A" font-size="13" font-weight="600" class="pointer-events-none" font-family="sans-serif">Occipital Lobe</text>
+                <text x="200" y="353" text-anchor="middle" :fill="getRegionTextFill('occipital')" font-size="13" font-weight="600" class="pointer-events-none" font-family="sans-serif" style="transition: fill 0.25s ease;">Occipital Lobe</text>
               </g>
               <g @click="selectRegion('brainstem')" @mouseenter="hoveredRegion = 'brainstem'" @mouseleave="hoveredRegion = null" class="cursor-pointer">
                 <rect x="170" y="405" width="60" height="40" rx="8" :fill="getRegionFill('brainstem')" :stroke="selectedRegion === 'brainstem' || hoveredRegion === 'brainstem' ? '#1A4FAB' : '#EBEBEB'" stroke-width="2" :opacity="getRegionOpacity('brainstem')" style="transition:all 0.25s ease"/>
-                <text x="200" y="430" text-anchor="middle" fill="#1A1A1A" font-size="12" font-weight="600" class="pointer-events-none" font-family="sans-serif">Brainstem</text>
+                <text x="200" y="430" text-anchor="middle" :fill="getRegionTextFill('brainstem')" font-size="12" font-weight="600" class="pointer-events-none" font-family="sans-serif" style="transition: fill 0.25s ease;">Brainstem</text>
               </g>
               <g @click="selectRegion('cerebellum')" @mouseenter="hoveredRegion = 'cerebellum'" @mouseleave="hoveredRegion = null" class="cursor-pointer">
                 <ellipse cx="200" cy="490" rx="80" ry="40" :fill="getRegionFill('cerebellum')" :stroke="selectedRegion === 'cerebellum' || hoveredRegion === 'cerebellum' ? '#1A4FAB' : '#EBEBEB'" stroke-width="2" :opacity="getRegionOpacity('cerebellum')" style="transition:all 0.25s ease"/>
-                <text x="200" y="496" text-anchor="middle" fill="#1A1A1A" font-size="14" font-weight="600" class="pointer-events-none" font-family="sans-serif">Cerebellum</text>
+                <text x="200" y="496" text-anchor="middle" :fill="getRegionTextFill('cerebellum')" font-size="14" font-weight="600" class="pointer-events-none" font-family="sans-serif" style="transition: fill 0.25s ease;">Cerebellum</text>
               </g>
             </svg>
             <p class="text-[#5A7A9B] text-sm text-center mt-4">Click any region to see what symptoms it causes</p>
