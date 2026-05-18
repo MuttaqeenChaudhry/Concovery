@@ -12,8 +12,8 @@ const exerciseDefinitions = [
   {
     name: 'Chin Tucks',
     reps: 10, sets: 3, holdSeconds: 5, restSeconds: 30,
-    instructions: 'Gently pull your chin straight back — like you are making a double chin. Hold the position, then release slowly.',
-    cue: 'Pull chin straight back — not down',
+    instructions: 'Gently pull your chin straight back, like you are making a double chin. Hold the position, then release slowly.',
+    cue: 'Pull chin straight back - not down',
     diagram: 'chin-tuck',
   },
   {
@@ -341,7 +341,7 @@ onUnmounted(() => {
               <path d="M 75 20 L 68 28 M 75 20 L 83 22" stroke="#1A4FAB" stroke-width="2" stroke-linecap="round"/>
               <path d="M135 55 Q150 30 125 20" stroke="#1A4FAB" stroke-width="2.5" stroke-dasharray="4 2"/>
               <path d="M 125 20 L 132 28 M 125 20 L 117 22" stroke="#1A4FAB" stroke-width="2" stroke-linecap="round"/>
-              <text x="45" y="110" font-size="10" fill="#1B7C3D" font-family="sans-serif" font-weight="600">Slow — stop before pain</text>
+              <text x="45" y="110" font-size="10" fill="#1B7C3D" font-family="sans-serif" font-weight="600">Slow! stop before pain</text>
             </svg>
 
             <svg v-else-if="def.diagram === 'isometric'" viewBox="0 0 200 120" class="w-full h-28" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -389,7 +389,7 @@ onUnmounted(() => {
                 </svg>
               </div>
             </div>
-            <p class="text-sm text-[#5A7A9B] text-center mt-2 mb-5">Live feed only — nothing recorded or stored</p>
+            <p class="text-sm text-[#5A7A9B] text-center mt-2 mb-5">Live feed only. Nothing recorded or stored</p>
           </div>
 
           <!-- Set and rep tracker -->
