@@ -284,38 +284,69 @@ onMounted(async () => {
 <template>
   <div class="bg-white min-h-screen">
 
-    <!-- ══════════════════════════════════════════════════════════════════════
-      HERO
-      Three stats preview the three data stories below.
-    ══════════════════════════════════════════════════════════════════════════ -->
-    <section style="background:#0A1628;" class="text-white">
-      <div class="max-w-[1200px] mx-auto px-10 py-24">
-        <div class="inline-flex items-center gap-2 border border-white/20 rounded-full px-4 py-1.5 mb-6">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="opacity-60"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          <span class="text-white/50 text-xs font-medium tracking-widest uppercase">Know Your Risk</span>
-        </div>
-        <h1 class="font-black text-white leading-none mb-6" style="font-size:clamp(40px,7vw,88px);letter-spacing:-0.03em;">
-          Smart athletes<br>know their risks.
-        </h1>
-        <p class="text-white/60 text-xl font-light max-w-2xl leading-relaxed mb-10">
-          You tape your ankles. You warm up. You train hard. Concussion is the one risk you cannot see coming. Understanding it is what separates good athletes from great ones.
-        </p>
-        <div class="flex flex-wrap gap-12">
-          <div>
-            <div class="text-5xl font-black text-white mb-1">1 in 3</div>
-            <div class="text-white/50 text-sm">hospitalisations involve<br>someone aged 15 to 24</div>
-          </div>
-          <div>
-            <div class="text-5xl font-black text-[#4D9FFF] mb-1">10 yrs</div>
-            <div class="text-white/50 text-sm">of Victorian hospital data<br>behind every number here</div>
-          </div>
-          <div>
-            <div class="text-5xl font-black text-white mb-1">21 days</div>
-            <div class="text-white/50 text-sm">mandatory protocol adopted<br>by AFL, NRL and Rugby Australia</div>
-          </div>
-        </div>
+<!-- ══════════════════════════════════════════════════════════════════════
+  HERO SECTION
+══════════════════════════════════════════════════════════════════════════ -->
+<section class="kyr-hero text-white">
+  <div class="kyr-hero-lines"></div>
+  <div class="kyr-hero-edge"></div>
+
+  <div class="w-full py-24 relative z-10" style="padding-left:80px; padding-right:80px;">
+    <div class="inline-flex items-center border border-white/20 rounded-full px-4 py-1.5 mb-6">
+      <span class="w-1.5 h-1.5 rounded-full bg-[#38bfff] mr-2 animate-pulse"></span>
+      <span class="text-white/50 text-xs font-medium tracking-widest uppercase">Know Your Risk</span>
+    </div>
+
+    <h1 class="kyr-hero-title text-white mb-6">
+      SMART ATHLETES<br>
+      KNOW THEIR <span style="color:#38bfff;">RISKS.</span>
+    </h1>
+    <p class="text-white/55 text-lg font-light max-w-lg leading-relaxed">
+      You tape your ankles. You warm up. You train hard. Concussion is the one risk you cannot see coming. Understanding it is what separates good athletes from great ones.
+    </p>
+  </div>
+
+  <!-- EKG heartbeat line -->
+  <div class="kyr-ekg">
+  <svg class="kyr-ekg-svg" viewBox="0 0 1200 56" fill="none"
+    xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+    <polyline
+      points="0,28
+              60,28  80,28  95,4  110,52  125,8  140,28
+              340,28 360,28 375,4 390,52  405,8  420,28
+              620,28 640,28 655,4 670,52  685,8  700,28
+              900,28 920,28 935,4 950,52  965,8  980,28
+              1200,28"
+      stroke="#38bfff" stroke-width="1.5" fill="none"/>
+  </svg>
+</div>
+</section>
+<!-- STATS STRIP — light blue section below hero -->
+<section class="kyr-stats-section">
+  <div class="max-w-[1200px] mx-auto px-10">
+    <div class="kyr-stats-grid">
+
+      <div class="kyr-stat-card">
+        <span class="kyr-stat-big">1 in 3</span>
+        <span class="kyr-stat-title">Young Victorians</span>
+        <span class="kyr-stat-desc">Hospitalisations involve someone aged 15 to 24 — the highest risk age group in Australian community sport.</span>
       </div>
-    </section>
+
+      <div class="kyr-stat-card">
+        <span class="kyr-stat-big" style="color:#38bfff;">10 yrs</span>
+        <span class="kyr-stat-title">Of real data</span>
+        <span class="kyr-stat-desc">Every chart on this page is built from a decade of Victorian hospital records — not estimates, not surveys.</span>
+      </div>
+
+      <div class="kyr-stat-card">
+        <span class="kyr-stat-big">21 days</span>
+        <span class="kyr-stat-title">Mandatory protocol</span>
+        <span class="kyr-stat-desc">The minimum recovery window adopted by AFL, NRL and Rugby Australia. The same standard professionals follow.</span>
+      </div>
+
+    </div>
+  </div>
+</section>
 
     <!-- ══════════════════════════════════════════════════════════════════════
       BEAT 1 — YOUR SPORT
@@ -906,5 +937,103 @@ onMounted(async () => {
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+
+/* ━━ HERO ━━ */
+.kyr-hero {
+  position: relative;
+  background: #07090e;
+  overflow: hidden;
+  min-height: 520px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.kyr-hero-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(48px, 8vw, 96px);
+  line-height: 1.02;
+  letter-spacing: 2px;
+}
+
+/* diagonal speed lines */
+.kyr-hero-lines {
+  position: absolute; inset: 0;
+  overflow: hidden; pointer-events: none; z-index: 1;
+}
+.kyr-hero-lines::before {
+  content: '';
+  position: absolute; top: -200%; left: -50%; width: 200%; height: 400%;
+  background-image: repeating-linear-gradient(
+    -65deg, transparent, transparent 80px,
+    rgba(56,191,255,0.025) 80px, rgba(56,191,255,0.025) 81px
+  );
+  animation: kyrLinesDrift 22s linear infinite;
+}
+@keyframes kyrLinesDrift {
+  from { transform: translateX(0); }
+  to   { transform: translateX(81px); }
+}
+
+/* left ice-blue edge bar */
+.kyr-hero-edge {
+  position: absolute; left: 0; top: 15%; bottom: 15%;
+  width: 3px; z-index: 2;
+  background: linear-gradient(to bottom, transparent, #38bfff 40%, #38bfff 60%, transparent);
+}
+
+/* ━━ STATS SECTION ━━ */
+.kyr-stats-section {
+  background: #e8f3ff;
+  padding: 40px 0;
+}
+.kyr-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  background: rgba(56,191,255,0.1);
+  border-radius: 24px;
+  overflow: hidden;
+}
+.kyr-stat-card {
+  background: #e8f3ff;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 40px;
+  gap: 6px;
+}
+.kyr-stat-big {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(52px, 6vw, 80px);
+  color: #0a1628;
+  line-height: 1;
+  letter-spacing: 1px;
+}
+.kyr-stat-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1A1A1A;
+}
+.kyr-stat-desc {
+  font-size: 13px;
+  color: #5A7A9B;
+  line-height: 1.6;
+  max-width: 260px;
+}
+
+/* EKG line */
+.kyr-ekg {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  z-index: 2; height: 56px; overflow: hidden; opacity: 0.18;
+}
+.kyr-ekg-svg {
+  width: 200%; height: 100%;
+  animation: kyrEkgScroll 3s linear infinite;
+}
+@keyframes kyrEkgScroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
 }
 </style>
