@@ -520,10 +520,28 @@ onUnmounted(() => {
     <!-- ══════════════════════════════════════════════════════════════════════
       FULL-SCREEN MAP WITH FLOATING PANEL
     ══════════════════════════════════════════════════════════════════════════ -->
-    <section class="relative" style="height:calc(100vh - 80px); min-height:680px;">
+    <section class="relative p-3" style="height:calc(100vh - 80px); min-height:680px; background: linear-gradient(160deg, #EBF3FF 0%, #DEF0FF 50%, #EBF3FF 100%);">
 
-      <!-- Map fills 100% of the section -->
-      <div ref="mapDiv" style="width:100%;height:100%;" />
+      <!-- Map — inset with rounded corners -->
+      <div class="relative w-full h-full rounded-3xl overflow-hidden shadow-xl">
+        <div ref="mapDiv" style="width:100%;height:100%;" />
+
+        <!-- Recenter button — bottom right of the map -->
+        <button
+          v-if="searchCentre"
+          @click="initMap(searchCentre.lat, searchCentre.lng)"
+          title="Return to your location"
+          class="absolute bottom-5 right-5 z-20 w-11 h-11 rounded-2xl flex items-center justify-center shadow-lg transition-all hover:scale-105"
+          style="background: white; border: 1.5px solid #EBEBEB;"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A4FAB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 2v3m0 14v3M2 12h3m14 0h3"/>
+            <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" opacity="0.3" fill="#1A4FAB"/>
+          </svg>
+        </button>
+
+      </div>
 
       <!-- Floating panel — overlays on left, contains search + results -->
       <div class="absolute top-5 left-5 bottom-5 z-20 flex flex-col rounded-3xl overflow-hidden shadow-2xl" style="width:420px; background: rgba(255,255,255,0.96); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
@@ -665,7 +683,7 @@ onUnmounted(() => {
           </div>
         </div>
 
-      </div>
+      </div><!-- end rounded map wrapper -->
     </section>
 
     <!-- ══════════════════════════════════════════════════════════════════════
