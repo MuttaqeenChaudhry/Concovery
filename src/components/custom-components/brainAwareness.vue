@@ -38,7 +38,32 @@ onMounted(() => {
   )
   const statsEl = document.getElementById('statsRow')
   if (statsEl) statsObserver.observe(statsEl)
+
+  const progressEl = document.getElementById('progressCard')
+  if (progressEl) {
+  const progressObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          barsVisible.value = true
+          progressObserver.unobserve(entry.target)
+        }
+      })
+    },
+    { threshold: 0.3 }
+  )
+  progressObserver.observe(progressEl)
+}
 })
+
+const animActive = ref(true)
+
+function restartAnim() {
+  animActive.value = false
+  setTimeout(() => animActive.value = true, 50)
+}
+
+const barsVisible = ref(false)
 </script>
 
 <template>
@@ -215,10 +240,10 @@ onMounted(() => {
             </router-link>
           </div>
 
-          <div class="progress-card">
+          <div class="progress-card" id="progressCard">
             <div class="progress-card-label">Brain Recovery Progress</div>
             <div
-              v-for="item in [
+              v-for="(item, index) in [
                 { day: 'Day 1',  label: 'Acute phase. Complete rest.',  pct: 10,  color: '#ff3d00' },
                 { day: 'Day 7',  label: 'Feels fine. 30% recovered.',   pct: 30,  color: '#ff9900' },
                 { day: 'Day 14', label: 'Repairing. Not ready yet.',     pct: 70,  color: '#4488ff' },
@@ -236,7 +261,11 @@ onMounted(() => {
                 <span class="progress-pct">{{ item.pct }}%</span>
               </div>
               <div class="progress-track">
-                <div class="progress-fill" :style="{ width: `${item.pct}%`, background: item.color }" />
+                <div class="progress-fill" :style="{
+  width: barsVisible ? `${item.pct}%` : '0%',
+  background: item.color,
+  transitionDelay: `${index * 0.18}s`
+}" />
               </div>
             </div>
 
@@ -255,62 +284,135 @@ onMounted(() => {
 
 
     <!-- LOTTIE / ANIMATED SECTION -->
-    <section class="section bg-surface fade-up">
-      <div class="container">
-        <div class="lottie-grid">
+  <!-- FOOTBALL CONCUSSION ANIMATION -->
+<section class="section bg-surface fade-up">
+  <div class="container">
+    <div class="lottie-grid">
 
-          <div class="lottie-frame">
-            <!--
-              REPLACE WITH LOTTIE:
-              <lottie-player src="/your-animation.json" background="transparent" speed="1" loop autoplay />
-              Get files at lottiefiles.com — search "running athlete"
-            -->
-            <div class="runner-scene">
-              <span class="scene-bubble">Day 7 trap ⚡</span>
-              <span class="scene-bubble">Brain healing: 30%</span>
-              <span class="scene-bubble">Don't rush it</span>
-              <div class="speed-lines">
-                <div class="speed-line" />
-                <div class="speed-line" />
-                <div class="speed-line" />
-              </div>
-              <div class="runner">
-                <div class="r-head" />
-                <div class="r-body" />
-                <div class="r-arm-l" />
-                <div class="r-arm-r" />
-                <div class="r-leg-l" />
-                <div class="r-leg-r" />
-              </div>
-              <div class="track" />
-            </div>
-            <div class="lottie-badge">REPLACE WITH LOTTIE</div>
-          </div>
+      <!-- SVG football scene — click to restart animation -->
+      <div class="fp-wrap" @click="restartAnim" :class="{ 'fp-active': animActive }">
+        <svg viewBox="0 0 400 400" class="fp-svg" xmlns="http://www.w3.org/2000/svg">
 
-          <div class="fade-up">
-            <div class="eyebrow">Why it matters</div>
-            <h2 class="section-title" style="font-size: clamp(40px,6vw,72px);line-height:0.95;letter-spacing:-0.03em;margin-bottom:24px;">
-              YOUR BRAIN<br>ISN'T A<br><span class="always-ice">MUSCLE.</span>
-            </h2>
-            <p class="body-text">
-              Muscles heal when you rest them. Brains heal on a completely different timeline,
-              one that does not care how good you feel on Day 7.
-            </p>
-            <router-link to="/rtprule">
-              <button class="btn-primary" style="margin-top:32px;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                  fill="none" stroke="currentColor" stroke-width="2.5">
-                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-                </svg>
-                Read the science
-              </button>
-            </router-link>
-          </div>
+          <!-- Pitch background -->
+          <rect width="400" height="400" fill="#07090e"/>
+          <!-- Grass stripes -->
+          <rect x="0"   width="57"  height="400" fill="#0b1220" opacity="0.7"/>
+          <rect x="114" width="57"  height="400" fill="#0b1220" opacity="0.7"/>
+          <rect x="228" width="57"  height="400" fill="#0b1220" opacity="0.7"/>
+          <rect x="342" width="57"  height="400" fill="#0b1220" opacity="0.7"/>
 
-        </div>
+          <!-- Pitch lines -->
+          <line x1="200" y1="0" x2="200" y2="400" stroke="rgba(56,191,255,0.25)" stroke-width="2"/>
+          <circle cx="200" cy="200" r="55" fill="none" stroke="rgba(56,191,255,0.2)" stroke-width="1.5"/>
+          <circle cx="200" cy="200" r="3"  fill="rgba(255,255,255,0.3)"/>
+          <!-- Penalty boxes -->
+          <rect x="0"   y="150" width="80"  height="100" fill="none" stroke="rgba(56,191,255,0.2)" stroke-width="1.5"/>
+          <rect x="320" y="150" width="80"  height="100" fill="none" stroke="rgba(56,191,255,0.2)" stroke-width="1.5"/>
+
+          <!-- Goalpost left -->
+          <line x1="10" y1="158" x2="55" y2="158" stroke="white" stroke-width="4" stroke-linecap="round"/>
+          <line x1="10" y1="158" x2="10" y2="242" stroke="white" stroke-width="4" stroke-linecap="round"/>
+          <line x1="55" y1="158" x2="55" y2="242" stroke="white" stroke-width="4" stroke-linecap="round"/>
+          <!-- Net pattern -->
+          <rect x="10" y="158" width="45" height="84" fill="url(#net)" opacity="0.4"/>
+          <defs>
+            <pattern id="net" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
+              <path d="M0 0 L8 8 M8 0 L0 8" stroke="white" stroke-width="0.5"/>
+            </pattern>
+          </defs>
+
+          <!-- Ground shadow under player -->
+          <ellipse cx="155" cy="336" rx="22" ry="5" fill="rgba(0,0,0,0.3)"/>
+
+          <!-- Player body — jersey #7 -->
+          <!-- Legs -->
+          <line x1="150" y1="290" x2="138" y2="332" stroke="#003399" stroke-width="9" stroke-linecap="round" class="fp-leg-l"/>
+          <line x1="160" y1="290" x2="172" y2="332" stroke="#003399" stroke-width="9" stroke-linecap="round" class="fp-leg-r"/>
+          <!-- Shorts -->
+          <rect x="138" y="273" width="34" height="20" rx="3" fill="#002277"/>
+          <!-- Torso / jersey -->
+          <rect x="136" y="228" width="38" height="48" rx="5" fill="#cc0000"/>
+          <!-- Jersey number -->
+          <text x="155" y="257" text-anchor="middle" font-size="14" font-weight="bold" fill="white">7</text>
+          <!-- Arms -->
+          <line x1="136" y1="242" x2="112" y2="265" stroke="#cc0000" stroke-width="9" stroke-linecap="round" class="fp-arm-l"/>
+          <line x1="174" y1="242" x2="198" y2="265" stroke="#cc0000" stroke-width="9" stroke-linecap="round" class="fp-arm-r"/>
+          <!-- Neck -->
+          <rect x="149" y="218" width="12" height="12" rx="3" fill="#ffcc88"/>
+
+          <!-- Head group — wobbles on impact -->
+          <g class="fp-head-group">
+            <circle cx="155" cy="203" r="22" fill="#ffcc88"/>
+            <!-- Eyes (normal) -->
+            <circle cx="148" cy="199" r="3" fill="#333" class="fp-eye-l"/>
+            <circle cx="162" cy="199" r="3" fill="#333" class="fp-eye-r"/>
+            <!-- Mouth (normal smile → frown on impact) -->
+            <path d="M148 210 Q155 215 162 210" stroke="#333" stroke-width="2" fill="none" stroke-linecap="round" class="fp-mouth"/>
+            <!-- Hair -->
+            <path d="M133 198 Q135 178 155 177 Q175 178 177 198" fill="#3a1a00"/>
+
+            <!-- Stars (appear on impact, orbit around head) -->
+            <g class="fp-stars">
+              <text x="128" y="178" font-size="14" fill="#ffd700">★</text>
+              <text x="153" y="171" font-size="14" fill="#ffaa00">★</text>
+              <text x="178" y="178" font-size="14" fill="#ffd700">★</text>
+            </g>
+
+            <!-- Dizzy swirls (appear on impact) -->
+            <g class="fp-dizzy">
+              <circle cx="148" cy="199" r="5" fill="#ff6600" class="fp-dizzy-eye-l"/>
+              <circle cx="162" cy="199" r="5" fill="#ff6600" class="fp-dizzy-eye-r"/>
+              <!-- X eyes -->
+              <line x1="145" y1="196" x2="151" y2="202" stroke="white" stroke-width="1.5"/>
+              <line x1="151" y1="196" x2="145" y2="202" stroke="white" stroke-width="1.5"/>
+              <line x1="159" y1="196" x2="165" y2="202" stroke="white" stroke-width="1.5"/>
+              <line x1="165" y1="196" x2="159" y2="202" stroke="white" stroke-width="1.5"/>
+            </g>
+          </g>
+
+          <!-- Impact ring (expands on hit) -->
+          <circle cx="155" cy="203" r="28" fill="none" stroke="#ffff00" stroke-width="3" class="fp-impact-ring"/>
+
+          <!-- The football — comes from right, hits head, bounces off -->
+          <text x="345" y="215" font-size="32" class="fp-ball">⚽</text>
+
+          <!-- Info labels -->
+          <rect x="8"   y="350" width="128" height="28" rx="14" fill="rgba(56,191,255,0.15)" stroke="rgba(56,191,255,0.4)" stroke-width="1"/>
+          <text x="72"  y="368" text-anchor="middle" font-size="11" font-weight="bold" fill="#38bfff"> Day 7 trap</text>
+
+          <rect x="258" y="14" width="134" height="28" rx="14" fill="rgba(56,191,255,0.15)" stroke="rgba(56,191,255,0.4)" stroke-width="1"/>
+          <text x="325" y="32" text-anchor="middle" font-size="11" font-weight="bold" fill="#38bfff">Brain: 30% healed</text>
+
+          <!-- Click hint -->
+          <text x="200" y="392" text-anchor="middle" font-size="10" fill="rgba(255,255,255,0.35)">click to replay</text>
+
+        </svg>
       </div>
-    </section>
+
+      <div class="fade-up">
+        <div class="eyebrow">Why it matters</div>
+        <h2 class="section-title" style="font-size: clamp(40px,6vw,72px);line-height:0.95;letter-spacing:-0.03em;margin-bottom:24px;">
+          YOUR BRAIN<br>ISN'T A<br><span class="always-ice">MUSCLE.</span>
+        </h2>
+        <p class="body-text">
+          Muscles heal when you rest them. Brains heal on a completely different timeline,
+          one that does not care how good you feel on Day 7.
+        </p>
+        <router-link to="/rtprule">
+          <button class="btn-primary" style="margin-top:32px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+            </svg>
+            Read the science
+          </button>
+        </router-link>
+      </div>
+
+    </div>
+  </div>
+</section>
 
 
     <!-- FINAL CTA -->
@@ -327,7 +429,7 @@ onMounted(() => {
             <button class="btn-primary btn-large">Check my sport</button>
           </router-link>
           <router-link to="/iteration3/stagedrecovery">
-            <button class="btn-ghost btn-large">
+            <button class="btn-primary btn-large">
               Start recovery plan
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                 fill="none" stroke="currentColor" stroke-width="2">
@@ -560,7 +662,11 @@ body.light .emergency-section { background: #07090e; }
 .progress-label { font-size: 12px; font-weight: 300; color: rgba(255,255,255,0.45); }
 .progress-pct  { font-size: 12px; color: rgba(255,255,255,0.35); }
 .progress-track { height: 4px; background: rgba(255,255,255,0.07); border-radius: 2px; overflow: hidden; }
-.progress-fill  { height: 100%; border-radius: 2px; }
+.progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 1.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
 .trap-callout { display: flex; gap: 12px; margin-top: 24px; background: rgba(56,191,255,0.07); border: 1px solid rgba(56,191,255,0.2); border-left: 3px solid #38bfff; border-radius: 10px; padding: 14px 16px; }
 .trap-icon { width: 22px; height: 22px; border-radius: 50%; background: #38bfff; color: #07090e; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .trap-text { font-size: 13px; color: rgba(255,255,255,0.75); line-height: 1.6; }
@@ -640,4 +746,111 @@ body.light .emergency-section { background: #07090e; }
 .fab-ico-ice  { background: var(--ice); }
 .fab-ico-dark { background: var(--card); border: 1px solid var(--border); }
 .fab-ico-red  { background: var(--danger); }
+
+/* FOOTBALL SCENE */
+.fp-wrap {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  aspect-ratio: 1;
+}
+.fp-wrap:hover { opacity: 0.95; }
+
+.fp-svg { width: 100%; height: 100%; display: block; }
+
+/* Ball flies in, hits head, bounces back — 5s loop */
+.fp-active .fp-ball {
+  animation: fpBallFly 5s ease-in-out infinite;
+}
+@keyframes fpBallFly {
+  0%, 15%  { transform: translate(0px,   0px)  rotate(0deg);    opacity: 1; }
+  35%      { transform: translate(-95px, -18px) rotate(-180deg); opacity: 1; }
+  50%      { transform: translate(-196px, 0px)  rotate(-360deg); opacity: 1; }
+  54%      { transform: translate(-175px,-30px) rotate(-400deg); opacity: 1; }
+  68%      { transform: translate(-20px, -90px) rotate(-540deg); opacity: 0.2; }
+  70%, 90% { transform: translate(0px,   0px)  rotate(0deg);    opacity: 0; }
+  100%     { transform: translate(0px,   0px)  rotate(0deg);    opacity: 1; }
+}
+
+/* Head wobbles on impact (at 50% = 2.5s) */
+.fp-active .fp-head-group {
+  transform-origin: 155px 203px;
+  animation: fpHeadBonk 5s ease-in-out infinite;
+}
+@keyframes fpHeadBonk {
+  0%, 48%  { transform: rotate(0deg); }
+  50%      { transform: rotate(-28deg); }
+  52%      { transform: rotate(22deg); }
+  55%      { transform: rotate(-16deg); }
+  58%      { transform: rotate(10deg); }
+  62%      { transform: rotate(-5deg); }
+  67%      { transform: rotate(0deg); }
+  100%     { transform: rotate(0deg); }
+}
+
+/* Stars orbit around head after impact */
+.fp-active .fp-stars {
+  transform-origin: 155px 203px;
+  animation: fpStarOrbit 5s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes fpStarOrbit {
+  0%, 48%   { opacity: 0; transform: rotate(0deg) scale(0); }
+  50%       { opacity: 1; transform: rotate(0deg) scale(1); }
+  60%       { opacity: 1; transform: rotate(120deg) scale(1); }
+  70%       { opacity: 0; transform: rotate(240deg) scale(0.5); }
+  100%      { opacity: 0; }
+}
+
+/* Dizzy X eyes appear on impact */
+.fp-active .fp-dizzy {
+  animation: fpDizzy 5s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes fpDizzy {
+  0%, 48%  { opacity: 0; }
+  50%, 68% { opacity: 1; }
+  72%      { opacity: 0; }
+  100%     { opacity: 0; }
+}
+
+/* Normal eyes disappear on impact */
+.fp-active .fp-eye-l,
+.fp-active .fp-eye-r,
+.fp-active .fp-mouth {
+  animation: fpEyeHide 5s ease-in-out infinite;
+}
+@keyframes fpEyeHide {
+  0%, 48%  { opacity: 1; }
+  50%, 68% { opacity: 0; }
+  72%      { opacity: 1; }
+  100%     { opacity: 1; }
+}
+
+/* Yellow impact ring expands on hit */
+.fp-active .fp-impact-ring {
+  transform-origin: 155px 203px;
+  animation: fpImpactRing 5s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes fpImpactRing {
+  0%, 48%  { transform: scale(0); opacity: 0; }
+  50%      { transform: scale(1);   opacity: 1; }
+  57%      { transform: scale(2.8); opacity: 0; }
+  100%     { transform: scale(0);   opacity: 0; }
+}
+
+/* Left leg staggers on impact */
+.fp-active .fp-leg-l {
+  transform-origin: 150px 290px;
+  animation: fpLegStagger 5s ease-in-out infinite;
+}
+@keyframes fpLegStagger {
+  0%, 48%  { transform: rotate(0deg); }
+  50%, 66% { transform: rotate(-12deg); }
+  70%      { transform: rotate(0deg); }
+  100%     { transform: rotate(0deg); }
+}
 </style>
