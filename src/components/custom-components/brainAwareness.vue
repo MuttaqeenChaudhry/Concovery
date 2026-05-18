@@ -89,8 +89,7 @@ const barsVisible = ref(false)
           </h1>
 
           <p class="hero-sub">
-            Concussion awareness for Victorian community sport players, parents and coaches.
-            Real AIHW data. Actual science. No guesswork.
+            Everything you need to know about concussion, from the moment it happens to the day you return.
           </p>
 
           <div class="hero-actions">
@@ -415,10 +414,9 @@ const barsVisible = ref(false)
 </section>
 
 
-    <!-- FINAL CTA -->
     <section class="cta-section fade-up">
       <div class="container cta-inner">
-        <div class="cta-eyebrow">Free · No sign-up · Built for Victorian community sport</div>
+        <div class="cta-eyebrow">Free · No sign-up · Built for Australian community sport</div>
         <h2 class="cta-title">
           THE<br>COMEBACK<br>
           <span class="always-ice">STARTS HERE.</span>
