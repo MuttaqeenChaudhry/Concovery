@@ -493,7 +493,7 @@ onUnmounted(() => {
           HELP <span style="color:#38bfff;">NEAR YOU.</span>
         </h1>
         <p class="text-white/55 text-lg font-light max-w-lg leading-relaxed">
-          A concussion needs a real doctor, not a search engine. Use this tool to find GPs, sports medicine clinics and hospitals within reach — before you need them in a hurry.
+          A concussion needs a real doctor, not a search engine. Use this tool to find GPs, sports medicine clinics and hospitals within reach, before you need them in a hurry.
         </p>
       </div>
 
@@ -687,48 +687,32 @@ onUnmounted(() => {
     </section>
 
     <!-- ══════════════════════════════════════════════════════════════════════
-      FOOTER CTA — matches Beat 6 dark section
+      FOOTER CTA
     ══════════════════════════════════════════════════════════════════════════ -->
-    <section style="background:#0A1628;" class="py-24">
+    <section style="background:#0A1628;" class="py-12">
       <div class="max-w-[1200px] mx-auto px-10">
-        <div class="text-center mb-14">
-          <h2 class="text-4xl font-bold text-white mb-4">Can't find a nearby clinic?</h2>
-          <p class="text-white/60 text-lg max-w-xl mx-auto">Healthdirect provides 24/7 health advice over the phone and can help you find local services anywhere in Australia — at no cost.</p>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-          <a href="tel:1800022222" class="block">
-            <div class="bg-[#1A4FAB] rounded-3xl p-10 h-full hover:bg-[#1440A0] transition-colors group">
-              <div class="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center mb-6">
-                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+
+        <a href="tel:1800022222" class="block">
+          <div class="bg-[#1A4FAB] hover:bg-[#1440A0] transition-colors rounded-3xl px-10 py-8 flex flex-col sm:flex-row items-center justify-between gap-6 group">
+            <div class="flex items-center gap-6">
+              <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
                 </svg>
               </div>
-              <h3 class="text-2xl font-bold text-white mb-3">Call Healthdirect now</h3>
-              <p class="text-white/70 text-base leading-relaxed mb-6">Free health advice 24 hours a day, 7 days a week. A registered nurse or GP can advise you on next steps after a concussion.</p>
-              <div class="flex items-center gap-2 text-white font-semibold">
-                <span>1800 022 222</span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:translate-x-1 transition-transform"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              <div>
+                <h3 class="text-xl font-bold text-white mb-1">Can't find a nearby clinic? Call Healthdirect.</h3>
+                <p class="text-white/70 text-sm">Free 24/7 health advice — a nurse or GP will help you find local support after a concussion.</p>
               </div>
             </div>
-          </a>
-          <router-link to="/iteration3/knowyourrisk" class="block">
-            <div class="bg-white/5 border border-white/10 rounded-3xl p-10 h-full hover:bg-white/10 transition-colors group">
-              <div class="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center mb-6">
-                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.46 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/>
-                  <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.46 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/>
-                </svg>
-              </div>
-              <h3 class="text-2xl font-bold text-white mb-3">Understand your risk first</h3>
-              <p class="text-white/60 text-base leading-relaxed mb-6">Go back to Know Your Risk to see how your sport and age group compare — and what the data says about concussion in community sport.</p>
-              <div class="flex items-center gap-2 text-white font-semibold">
-                <span>Know Your Risk</span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:translate-x-1 transition-transform"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-              </div>
+            <div class="flex items-center gap-2 text-white font-bold text-lg whitespace-nowrap flex-shrink-0">
+              <span>1800 022 222</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:translate-x-1 transition-transform"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
             </div>
-          </router-link>
-        </div>
-        <p class="text-center text-white/30 text-sm">Clinic data sourced from Google Places API · Always verify opening hours before visiting</p>
+          </div>
+        </a>
+
+        <p class="text-center text-white/30 text-xs mt-6">Clinic data sourced from Google Places API · Always verify opening hours before visiting</p>
       </div>
     </section>
 
