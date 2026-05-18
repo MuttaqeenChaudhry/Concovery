@@ -656,6 +656,7 @@ const reactionStartTime = ref(0)
 const reactionResult    = ref(0)
 const reactionRound     = ref(0)
 let reactionTimeout: ReturnType<typeof setTimeout> | null = null
+const reactionHistory   = ref<{ day: number; avg: number; date: string }[]>([])
 
 function startReactionTest() {
   reactionPhase.value = 'waiting'
@@ -694,10 +695,10 @@ function tapReaction() {
 }
 function resetReaction() { reactionPhase.value = 'idle'; reactionTimes.value = []; reactionRound.value = 0 }
 function getReactionLabel(ms: number) {
-  if (ms < 250) return { label: 'Excellent, brain speed is fully recovered',                              color: '#1B7C3D' }
-  if (ms < 350) return { label: 'Good, cognitive recovery is progressing well',                           color: '#38bfff' }
-  if (ms < 450) return { label: 'Fair, keep following the recovery protocol',                             color: '#E65100' }
-  return             { label: 'Still slow, your brain is still recovering. Do not rush your return',      color: '#C62828' }
+  if (ms < 250) return { label: 'Excellent, brain speed is fully recovered',                         color: '#1B7C3D' }
+  if (ms < 350) return { label: 'Good, cognitive recovery is progressing well',                      color: '#38bfff' }
+  if (ms < 450) return { label: 'Fair, keep following the recovery protocol',                        color: '#E65100' }
+  return             { label: 'Still slow, your brain is still recovering. Do not rush your return', color: '#C62828' }
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -775,6 +776,9 @@ onMounted(() => {
 
   const savedCognitive = localStorage.getItem('concovery_cognitive')
   if (savedCognitive) cognitiveHistory.value = JSON.parse(savedCognitive)
+
+  const savedReaction = localStorage.getItem('concovery_reaction')
+  if (savedReaction) reactionHistory.value = JSON.parse(savedReaction)
 
   // If the user is returning from the exercise page, reopen the modal at the journal step
   const returnFlag = localStorage.getItem('concovery_return_modal')
@@ -873,6 +877,24 @@ const props = defineProps({
     })
   }
 })
+// Groups all localStorage logs by day for the progress log section
+const progressLog = computed(() => {
+  const days = new Set<number>()
+  journalEntries.value.forEach(e  => days.add(e.day))
+  sleepHistory.value.forEach(e    => days.add(e.day))
+  cognitiveHistory.value.forEach(e => days.add(e.day))
+  reactionHistory.value.forEach(e  => days.add(e.day))
+
+  return Array.from(days).sort((a, b) => b - a).map(day => ({
+    day,
+    journal:   journalEntries.value.find(e => e.day === day) || null,
+    sleep:     sleepHistory.value.find(e => e.day === day) || null,
+    cognitive: cognitiveHistory.value.filter(e => e.day === day).at(-1) || null,
+    reaction:  reactionHistory.value.filter(e => e.day === day).at(-1) || null,
+  }))
+})
+
+const showProgressLog = ref(false)
 
 </script>
 
@@ -928,18 +950,18 @@ const props = defineProps({
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bfff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
             </button>
 
-            <div v-if="showCalendar" class="absolute top-full left-1/2 -translate-x-1/2 mt-2 sr-card rounded-2xl shadow-2xl border border-white/10 p-4 z-50 w-80">
+            <div v-if="showCalendar" class="absolute top-full left-1/2 -translate-x-1/2 mt-2 sr-card rounded-2xl shadow-2xl border border-[#EBEBEB] p-4 z-50 w-80">
               <div class="flex items-center justify-between mb-4">
                 <button @click="prevMonth" class="p-2 hover:bg-[#F5F8FF] rounded-lg transition-colors">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
                 </button>
-                <span class="font-bold sr-body">{{ monthNames[calendarMonth] }} {{ calendarYear }}</span>
+                <span class="font-bold text-[#1A1A1A]">{{ monthNames[calendarMonth] }} {{ calendarYear }}</span>
                 <button @click="nextMonth" :disabled="isNextMonthDisabled" class="p-2 hover:bg-[#F5F8FF] rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                 </button>
               </div>
               <div class="grid grid-cols-7 mb-2">
-                <div v-for="d in ['Su','Mo','Tu','We','Th','Fr','Sa']" :key="d" class="text-center text-xs font-semibold sr-muted py-1">{{ d }}</div>
+                <div v-for="d in ['Su','Mo','Tu','We','Th','Fr','Sa']" :key="d" class="text-center text-xs font-semibold text-[#5A7A9B] py-1">{{ d }}</div>
               </div>
               <div class="grid grid-cols-7 gap-1">
                 <div v-for="blank in calendarStartDay" :key="'b'+blank" />
@@ -948,19 +970,19 @@ const props = defineProps({
                   @click="selectCalendarDate(day)"
                   :disabled="isFutureDay(day)"
                   class="aspect-square rounded-lg text-sm font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                  :class="isSelectedCalDay(day) ? 'bg-[#38bfff] text-[#07090e] shadow-md' : isToday(day) ? 'border-2 border-[#38bfff] text-[#38bfff]' : 'hover:bg-[#F5F8FF] sr-body'"
+                  :class="isSelectedCalDay(day) ? 'bg-[#38bfff] text-[#07090e] shadow-md' : isToday(day) ? 'border-2 border-[#38bfff] text-[#38bfff]' : 'hover:bg-[#F5F8FF] text-[#1A1A1A]'"
                 >{{ day }}</button>
               </div>
             </div>
           </div>
 
           <Transition name="fade-scale">
-            <div v-if="daysSinceInjury !== null" class="sr-card rounded-2xl border border-white/10 shadow-lg p-8">
+            <div v-if="daysSinceInjury !== null" class="sr-card rounded-2xl border border-[#EBEBEB] shadow-lg p-8">
               <div class="text-6xl font-black text-[#38bfff] mb-2" style="letter-spacing:-0.03em;">You are on Day {{ daysSinceInjury }}</div>
-              <p class="text-lg sr-muted mb-6">of your 21-day recovery</p>
+              <p class="text-lg text-[#5A7A9B] mb-6">of your 21-day recovery</p>
 
               <div class="mb-6">
-                <div class="flex justify-between text-sm sr-muted mb-3 px-1">
+                <div class="flex justify-between text-sm text-[#5A7A9B] mb-3 px-1">
                   <span>Day 1</span><span>Day 7</span><span>Day 14</span><span>Day 21</span>
                 </div>
                 <div class="flex gap-0.5 justify-between mb-3">
@@ -979,20 +1001,21 @@ const props = defineProps({
                         outlineOffset: '2px'
                       }"
                     />
+                    <!-- FIX: group-hover:text-[#5A7A9B] — was invalid group-hover:sr-muted -->
                     <span
                       class="text-sm font-bold transition-all"
-                      :class="selectedDay === day || getDayStatus(day) === 'today' ? 'text-[#38bfff]' : 'text-transparent group-hover:sr-muted'"
+                      :class="selectedDay === day || getDayStatus(day) === 'today' ? 'text-[#38bfff]' : 'text-transparent group-hover:text-[#5A7A9B]'"
                     >{{ day }}</span>
                   </button>
                 </div>
                 <div class="flex gap-4 justify-center">
-                  <div class="flex items-center gap-1.5"><div class="w-3 h-1.5 rounded-full bg-[#1B7C3D]"/><span class="text-sm sr-muted">Past</span></div>
-                  <div class="flex items-center gap-1.5"><div class="w-3 h-1.5 rounded-full bg-[#38bfff]"/><span class="text-sm sr-muted">Today</span></div>
-                  <div class="flex items-center gap-1.5"><div class="w-3 h-1.5 rounded-full bg-[#EBEBEB]"/><span class="text-sm sr-muted">Upcoming</span></div>
+                  <div class="flex items-center gap-1.5"><div class="w-3 h-1.5 rounded-full bg-[#1B7C3D]"/><span class="text-sm text-[#5A7A9B]">Past</span></div>
+                  <div class="flex items-center gap-1.5"><div class="w-3 h-1.5 rounded-full bg-[#38bfff]"/><span class="text-sm text-[#5A7A9B]">Today</span></div>
+                  <div class="flex items-center gap-1.5"><div class="w-3 h-1.5 rounded-full bg-[#EBEBEB]"/><span class="text-sm text-[#5A7A9B]">Upcoming</span></div>
                 </div>
               </div>
 
-              <p v-if="daysUntilReturn && daysUntilReturn > 0" class="sr-muted mb-4 text-sm">{{ daysUntilReturn }} days until you can return to play</p>
+              <p v-if="daysUntilReturn && daysUntilReturn > 0" class="text-[#5A7A9B] mb-4 text-sm">{{ daysUntilReturn }} days until you can return to play</p>
               <p v-else-if="daysUntilReturn === 0" class="text-[#1B7C3D] font-semibold mb-4 text-sm">You have reached Day 21. Get medical clearance before returning.</p>
               <span v-if="currentStage" class="inline-block bg-[#38bfff] text-[#07090e] text-base font-semibold px-5 py-2 rounded-full">
                 Stage {{ currentStage }}, {{ stages[currentStage - 1].name }}
@@ -1007,11 +1030,12 @@ const props = defineProps({
     <section v-if="viewingDay && viewingDayData" class="sr-s2 py-28">
       <div class="max-w-[1200px] mx-auto px-10">
 
+        <!-- FIX: "(You are on Day N)" uses text-[#0a1628] so it's visible on light blue banner -->
         <div v-if="!isViewingToday" class="bg-[#38bfff]/10 border border-[#38bfff]/30 rounded-xl px-5 py-3 mb-6 flex items-center justify-between">
           <div class="flex items-center gap-3">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bfff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             <span class="text-[#38bfff] text-base font-semibold">Previewing Day {{ viewingDay }}, {{ viewingDayData.stageName }}</span>
-            <span class="sr-muted text-xs">(You are on Day {{ daysSinceInjury }})</span>
+            <span class="text-xs font-medium text-[#0a1628]">(You are on Day {{ daysSinceInjury }})</span>
           </div>
           <button @click="selectedDay = null" class="text-xs text-[#38bfff] font-semibold hover:underline">Back to today</button>
         </div>
@@ -1019,13 +1043,13 @@ const props = defineProps({
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
           <!-- Brain status card -->
-          <div class="sr-card rounded-2xl p-10 border border-white/10 shadow-sm">
+          <div class="sr-card rounded-2xl p-10 border border-[#EBEBEB] shadow-sm">
             <span class="inline-block bg-[#38bfff]/10 text-[#38bfff] text-xs font-semibold px-4 py-1.5 rounded-full mb-4">
               Day {{ viewingDay }}, {{ viewingDayData.stageName }}
             </span>
 
             <div class="mb-6">
-              <div class="flex justify-between text-sm sr-muted mb-1">
+              <div class="flex justify-between text-sm text-[#5A7A9B] mb-1">
                 <span>Brain recovery</span>
                 <span class="font-bold text-[#38bfff]">{{ viewingDayData.brainRecoveryPct }}%</span>
               </div>
@@ -1037,28 +1061,28 @@ const props = defineProps({
               </div>
             </div>
 
-            <h3 class="text-base font-bold sr-body mb-1">Your goal today</h3>
+            <h3 class="text-base font-bold text-[#1A1A1A] mb-1">Your goal today</h3>
             <p class="text-[#38bfff] font-semibold text-sm mb-5">{{ viewingDayData.dailyGoal }}</p>
 
             <!-- BACKEND HOOK: GET /brainStatus?day={viewingDay} returns { title, description } -->
-            <h3 class="text-base font-bold sr-body mb-2">{{ props.brainStatus.title }}</h3>
-            <p class="sr-body text-base leading-relaxed mb-5">{{ props.brainStatus.description }}</p>
+            <h3 class="text-base font-bold text-[#1A1A1A] mb-2">{{ props.brainStatus.title }}</h3>
+            <p class="text-[#1A1A1A] text-base leading-relaxed mb-5">{{ props.brainStatus.description }}</p>
 
             <div class="bg-[#C62828]/10 border border-[#C62828] rounded-xl p-5 flex gap-2 mb-4">
               <svg class="flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C62828" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              <p class="text-sm sr-body font-semibold">{{ viewingDayData.warningSign }}</p>
+              <p class="text-sm text-[#1A1A1A] font-semibold">{{ viewingDayData.warningSign }}</p>
             </div>
 
             <div class="bg-[#38bfff]/5 border border-[#38bfff]/20 rounded-xl p-5 flex gap-2">
               <svg class="flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bfff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              <p class="text-sm sr-body italic leading-relaxed">{{ viewingDayData.insight }}</p>
+              <p class="text-sm text-[#1A1A1A] italic leading-relaxed">{{ viewingDayData.insight }}</p>
             </div>
-            <p class="text-sm sr-muted italic mt-4">Source: Giza and Hovda, 2014. Neurometabolic Cascade. AIS 2024</p>
+            <p class="text-sm text-[#5A7A9B] italic mt-4">Source: Giza and Hovda, 2014. Neurometabolic Cascade. AIS 2024</p>
           </div>
 
           <!-- Activities card -->
-          <div class="sr-card rounded-2xl p-10 border border-white/10 shadow-sm">
-            <h3 class="sr-heading text-3xl font-bold mb-8">What you can do today</h3>
+          <div class="sr-card rounded-2xl p-10 border border-[#EBEBEB] shadow-sm">
+            <h3 class="text-3xl font-bold text-[#1A1A1A] mb-8">What you can do today</h3>
 
             <div class="mb-8">
               <div class="flex items-center gap-2 text-[#1B7C3D] font-bold text-base mb-5">
@@ -1070,7 +1094,7 @@ const props = defineProps({
                 <div
                   v-for="(a, idx) in viewingDayData.allowed"
                   :key="a.activity"
-                  class="activity-card flex items-start gap-4 sr-card-green border border-[#1B7C3D]/30 rounded-2xl p-5"
+                  class="activity-card flex items-start gap-4 sr-card-green border border-[#1B7C3D]/20 rounded-2xl p-5"
                   :class="isActivityChecked(`${viewingDay}-${a.activity}`) && !a.interactive ? 'opacity-60' : ''"
                   :style="{ animationDelay: `${idx * 90}ms` }"
                 >
@@ -1100,16 +1124,16 @@ const props = defineProps({
                       >
                         <svg v-if="isActivityChecked(`${viewingDay}-${a.activity}`)" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
                       </button>
-                      <span class="font-semibold sr-body text-sm" :class="isActivityChecked(`${viewingDay}-${a.activity}`) && !a.interactive ? 'line-through sr-muted' : ''">{{ a.activity }}</span>
+                      <span class="font-semibold text-[#1A1A1A] text-sm" :class="isActivityChecked(`${viewingDay}-${a.activity}`) && !a.interactive ? 'line-through text-[#5A7A9B]' : ''">{{ a.activity }}</span>
                     </div>
-                    <p class="text-sm sr-muted leading-relaxed mb-2">{{ a.detail }}</p>
+                    <p class="text-sm text-[#5A7A9B] leading-relaxed mb-2">{{ a.detail }}</p>
 
                     <!-- Breathing widget -->
                     <div v-if="a.interactive === 'breathing' && isViewingToday" class="mt-2">
                       <div v-if="!breathingActive && breathingPhase === 'idle'">
                         <button @click="startBreathing" class="text-xs bg-[#38bfff] text-[#07090e] px-4 py-2 rounded-full font-semibold hover:opacity-90 transition-colors">Start breathing exercise</button>
                       </div>
-                      <div v-else class="sr-card rounded-xl p-6 text-center">
+                      <div v-else class="bg-[#F5F8FF] rounded-xl p-6 text-center">
                         <div class="relative w-16 h-16 mx-auto mb-2">
                           <svg class="w-16 h-16 -rotate-90" viewBox="0 0 80 80">
                             <circle cx="40" cy="40" r="34" stroke="#EBEBEB" stroke-width="6" fill="none"/>
@@ -1117,10 +1141,10 @@ const props = defineProps({
                           </svg>
                           <div class="absolute inset-0 flex flex-col items-center justify-center">
                             <span class="text-sm font-bold text-[#38bfff] uppercase">{{ breathingPhase }}</span>
-                            <span class="text-base font-black sr-body">{{ breathingCount }}</span>
+                            <span class="text-base font-black text-[#1A1A1A]">{{ breathingCount }}</span>
                           </div>
                         </div>
-                        <p class="text-sm sr-muted mb-2">Cycle {{ breathingCycles + 1 }} of 3</p>
+                        <p class="text-sm text-[#5A7A9B] mb-2">Cycle {{ breathingCycles + 1 }} of 3</p>
                         <button @click="stopBreathing" class="text-xs text-[#C62828] hover:underline">Stop</button>
                       </div>
                     </div>
@@ -1129,39 +1153,39 @@ const props = defineProps({
                     <div v-if="a.interactive === 'cognitive' && isViewingToday" class="mt-2">
                       <div v-if="cognitivePhase === 'idle'">
                         <button @click="startCognitiveTest" class="text-xs bg-[#38bfff] text-[#07090e] px-4 py-2 rounded-full font-semibold hover:opacity-90 transition-colors">Start digit span test</button>
-                        <span v-if="cognitiveHistory.length > 0" class="text-sm sr-muted ml-2">
+                        <span v-if="cognitiveHistory.length > 0" class="text-sm text-[#5A7A9B] ml-2">
                           Last: {{ cognitiveHistory[cognitiveHistory.length - 1].correct ? 'Correct' : 'Incorrect' }}, {{ cognitiveHistory[cognitiveHistory.length - 1].length }} digits
                         </span>
                       </div>
-                      <div v-else-if="cognitivePhase === 'showing'" class="sr-card border border-[#38bfff]/20 rounded-xl p-6 text-center">
-                        <p class="text-sm sr-muted mb-3">Watch the digits carefully</p>
+                      <div v-else-if="cognitivePhase === 'showing'" class="bg-[#F5F8FF] border border-[#38bfff]/20 rounded-xl p-6 text-center">
+                        <p class="text-sm text-[#5A7A9B] mb-3">Watch the digits carefully</p>
                         <div class="h-16 flex items-center justify-center">
                           <Transition name="fade-scale" mode="out-in">
                             <span v-if="cognitiveShowDigit !== null" :key="cognitiveShowDigit" class="text-5xl font-black text-[#38bfff]">{{ cognitiveShowDigit }}</span>
                             <span v-else class="text-5xl font-black text-[#EBEBEB]">?</span>
                           </Transition>
                         </div>
-                        <p class="text-sm sr-muted mt-2">{{ cognitiveCurrentIndex }} of {{ cognitiveSequence.length }} shown</p>
+                        <p class="text-sm text-[#5A7A9B] mt-2">{{ cognitiveCurrentIndex }} of {{ cognitiveSequence.length }} shown</p>
                       </div>
-                      <div v-else-if="cognitivePhase === 'input'" class="sr-card border border-[#38bfff]/20 rounded-xl p-6">
-                        <p class="text-sm sr-muted mb-3 text-center">Enter the digits in order</p>
+                      <div v-else-if="cognitivePhase === 'input'" class="bg-[#F5F8FF] border border-[#38bfff]/20 rounded-xl p-6">
+                        <p class="text-sm text-[#5A7A9B] mb-3 text-center">Enter the digits in order</p>
                         <div class="flex gap-1 justify-center mb-3 min-h-[36px] flex-wrap">
                           <div v-for="(digit, i) in cognitiveInput" :key="i" class="w-8 h-8 bg-[#38bfff] text-[#07090e] rounded-lg flex items-center justify-center font-bold text-sm">{{ digit }}</div>
-                          <div v-for="i in (cognitiveSequence.length - cognitiveInput.length)" :key="'e'+i" class="w-8 h-8 sr-card border-2 border-white/20 rounded-lg"/>
+                          <div v-for="i in (cognitiveSequence.length - cognitiveInput.length)" :key="'e'+i" class="w-8 h-8 bg-white border-2 border-[#EBEBEB] rounded-lg"/>
                         </div>
                         <div class="grid grid-cols-3 gap-1 mb-2">
-                          <button v-for="n in [1,2,3,4,5,6,7,8,9]" :key="n" @click="tapCognitiveDigit(n)" class="py-2 bg-white border border-[#EBEBEB] rounded-lg text-sm font-bold sr-body hover:bg-[#38bfff] hover:text-[#07090e] transition-colors">{{ n }}</button>
+                          <button v-for="n in [1,2,3,4,5,6,7,8,9]" :key="n" @click="tapCognitiveDigit(n)" class="py-2 bg-white border border-[#EBEBEB] rounded-lg text-sm font-bold text-[#1A1A1A] hover:bg-[#38bfff] hover:text-[#07090e] transition-colors">{{ n }}</button>
                         </div>
                         <div class="grid grid-cols-3 gap-1">
                           <button @click="deleteCognitiveInput" class="py-2 bg-white border border-[#EBEBEB] rounded-lg text-sm font-bold text-[#C62828] hover:bg-[#FFF5F5] transition-colors">Del</button>
-                          <button @click="tapCognitiveDigit(0)" class="py-2 bg-white border border-[#EBEBEB] rounded-lg text-sm font-bold sr-body hover:bg-[#38bfff] hover:text-[#07090e] transition-colors">0</button>
+                          <button @click="tapCognitiveDigit(0)" class="py-2 bg-white border border-[#EBEBEB] rounded-lg text-sm font-bold text-[#1A1A1A] hover:bg-[#38bfff] hover:text-[#07090e] transition-colors">0</button>
                           <div/>
                         </div>
                       </div>
                       <div v-else-if="cognitivePhase === 'result'" class="rounded-xl p-6 text-center" :class="cognitiveResult === 'correct' ? 'bg-[#1B7C3D]/10 border border-[#1B7C3D]' : 'bg-[#C62828]/10 border border-[#C62828]'">
                         <p class="font-bold text-sm mb-1" :class="cognitiveResult === 'correct' ? 'text-[#1B7C3D]' : 'text-[#C62828]'">{{ cognitiveResult === 'correct' ? 'Correct sequence' : 'Incorrect sequence' }}</p>
-                        <p class="text-sm sr-muted mb-1">Sequence: {{ cognitiveSequence.join(', ') }}</p>
-                        <p class="text-sm sr-muted mb-3">Your input: {{ cognitiveInput.join(', ') }}</p>
+                        <p class="text-sm text-[#5A7A9B] mb-1">Sequence: {{ cognitiveSequence.join(', ') }}</p>
+                        <p class="text-sm text-[#5A7A9B] mb-3">Your input: {{ cognitiveInput.join(', ') }}</p>
                         <button @click="resetCognitive" class="text-xs text-[#38bfff] hover:underline">Try again</button>
                       </div>
                     </div>
@@ -1171,24 +1195,24 @@ const props = defineProps({
                       <div v-if="reactionPhase === 'idle'">
                         <button @click="startReactionTest" class="text-xs bg-[#38bfff] text-[#07090e] px-4 py-2 rounded-full font-semibold hover:opacity-90 transition-colors">Start reaction test</button>
                       </div>
-                      <div v-else-if="reactionPhase === 'waiting'" @click="tapReaction" class="sr-card border-2 border-[#38bfff] rounded-xl p-5 text-center cursor-pointer hover:opacity-80 transition-colors">
-                        <p class="text-xs font-semibold sr-body mb-1">Round {{ reactionRound }} of 5</p>
-                        <p class="text-sm sr-muted">Wait for the green circle...</p>
+                      <div v-else-if="reactionPhase === 'waiting'" @click="tapReaction" class="bg-[#F5F8FF] border-2 border-[#38bfff] rounded-xl p-5 text-center cursor-pointer hover:bg-[#EEF3FF] transition-colors">
+                        <p class="text-xs font-semibold text-[#1A1A1A] mb-1">Round {{ reactionRound }} of 5</p>
+                        <p class="text-sm text-[#5A7A9B]">Wait for the green circle...</p>
                         <div class="w-10 h-10 rounded-full bg-[#EBEBEB] mx-auto mt-2"/>
                       </div>
                       <div v-else-if="reactionPhase === 'ready'" @click="tapReaction" class="bg-[#1B7C3D]/10 border-2 border-[#1B7C3D] rounded-xl p-5 text-center cursor-pointer hover:bg-[#1B7C3D]/20 transition-colors">
-                        <p class="text-xs font-semibold sr-body mb-2">Tap now</p>
+                        <p class="text-xs font-semibold text-[#1A1A1A] mb-2">Tap now</p>
                         <div class="w-10 h-10 rounded-full bg-[#1B7C3D] mx-auto animate-pulse"/>
                       </div>
-                      <div v-else-if="reactionPhase === 'result'" class="sr-card rounded-xl p-5 text-center">
+                      <div v-else-if="reactionPhase === 'result'" class="bg-[#F5F8FF] rounded-xl p-5 text-center">
                         <p class="text-base font-black text-[#38bfff]">{{ reactionResult }}ms</p>
                         <p class="text-xs font-semibold mb-2" :style="{ color: getReactionLabel(reactionResult).color }">{{ getReactionLabel(reactionResult).label }}</p>
-                        <button @click="resetReaction" class="text-sm sr-muted hover:underline">Test again</button>
+                        <button @click="resetReaction" class="text-sm text-[#5A7A9B] hover:underline">Test again</button>
                       </div>
                     </div>
 
                     <div v-if="a.interactive && !isViewingToday" class="mt-2">
-                      <span class="text-sm sr-muted italic">Available when you reach Day {{ viewingDay }}</span>
+                      <span class="text-sm text-[#5A7A9B] italic">Available when you reach Day {{ viewingDay }}</span>
                     </div>
                   </div>
                 </div>
@@ -1204,17 +1228,17 @@ const props = defineProps({
               <div class="flex flex-wrap gap-2">
                 <div
                   v-for="r in viewingDayData.restricted" :key="r"
-                  class="inline-flex items-center gap-2 sr-card-red border border-[#C62828]/30 rounded-full px-4 py-2"
+                  class="inline-flex items-center gap-2 sr-card-red border border-[#C62828]/20 rounded-full px-4 py-2"
                 >
                   <span class="text-[#C62828] font-bold text-sm flex-shrink-0">✗</span>
-                  <span class="sr-body text-sm">{{ r }}</span>
+                  <span class="text-[#1A1A1A] text-sm">{{ r }}</span>
                 </div>
               </div>
             </div>
 
             <div class="bg-[#E65100]/10 border border-[#E65100] rounded-xl p-6 flex gap-3">
               <svg class="flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E65100" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              <p class="text-sm sr-body font-semibold">If any symptoms come back, stop immediately and return to Stage 1</p>
+              <p class="text-sm text-[#1A1A1A] font-semibold">If any symptoms come back, stop immediately and return to Stage 1</p>
             </div>
           </div>
         </div>
@@ -1224,9 +1248,9 @@ const props = defineProps({
     <!-- CHECK-IN BUTTON -->
     <section v-if="daysSinceInjury && isViewingToday" class="sr-s3 py-16">
       <div class="max-w-[1200px] mx-auto px-10 text-center">
-        <div class="sr-card border border-white/10 rounded-2xl p-8 max-w-xl mx-auto">
-          <h2 class="sr-heading text-xl font-bold mb-2">Complete today's check-in</h2>
-          <p class="sr-muted text-sm mb-6">
+        <div class="bg-[#F5F8FF] border border-[#38bfff]/20 rounded-2xl p-8 max-w-xl mx-auto">
+          <h2 class="text-xl font-bold text-[#1A1A1A] mb-2">Complete today's check-in</h2>
+          <p class="text-[#5A7A9B] text-sm mb-6">
             Takes about 3 minutes. Track your sleep, symptoms{{ currentStage && currentStage >= 2 ? ', exercises' : '' }} and how you feel today.
           </p>
           <div class="flex gap-2 justify-center mb-6">
@@ -1243,18 +1267,18 @@ const props = defineProps({
       </div>
     </section>
 
-    <!-- CHECK-IN MODAL -->
+    <!-- CHECK-IN MODAL — Sleep → Symptoms → Neck Exercises → Journal -->
     <Transition name="modal">
       <div
         v-if="showCheckInModal"
         class="fixed inset-0 z-50 flex items-center justify-center"
         style="background: rgba(10,22,40,0.85); backdrop-filter: blur(4px);"
       >
-        <div class="sr-card rounded-3xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden">
 
           <div class="px-10 pt-10 pb-8 border-b border-[#EBEBEB]">
             <div class="flex items-center justify-between mb-4">
-              <span class="text-sm font-semibold sr-muted uppercase tracking-widest">
+              <span class="text-sm font-semibold text-[#5A7A9B] uppercase tracking-widest">
                 Step {{ checkInStep }} of {{ totalCheckInSteps }}
               </span>
               <button @click="closeCheckIn" class="w-8 h-8 rounded-full bg-[#F7F9FC] flex items-center justify-center hover:bg-[#EBEBEB] transition-colors">
@@ -1275,8 +1299,8 @@ const props = defineProps({
               <!-- STEP 1: Sleep -->
               <div v-if="checkInStep === 1" key="sleep">
                 <div class="text-[#38bfff] text-xs font-semibold tracking-widest uppercase mb-2">Sleep</div>
-                <h3 class="text-3xl font-bold sr-body mb-3">How did you sleep last night?</h3>
-                <p class="sr-muted text-base mb-10">Sleep quality is one of the strongest predictors of how quickly you will recover.</p>
+                <h3 class="text-3xl font-bold text-[#1A1A1A] mb-3">How did you sleep last night?</h3>
+                <p class="text-[#5A7A9B] text-base mb-10">Sleep quality is one of the strongest predictors of how quickly you will recover.</p>
 
                 <div v-if="!sleepSubmitted" class="flex flex-col gap-3">
                   <button @click="submitSleep('well'); nextCheckInStep()" class="w-full py-4 rounded-xl border-2 font-semibold text-sm transition-all border-[#1B7C3D] text-[#1B7C3D] hover:bg-[#1B7C3D] hover:text-white">Well, slept through the night</button>
@@ -1285,16 +1309,16 @@ const props = defineProps({
                 </div>
 
                 <div v-else>
-                  <div class="sr-card border border-white/10 rounded-xl p-6 flex items-center justify-between mb-6">
+                  <div class="bg-[#F7F9FC] border border-[#EBEBEB] rounded-xl p-6 flex items-center justify-between mb-6">
                     <div class="flex items-center gap-3">
                       <div class="w-3 h-3 rounded-full" :style="{ background: sleepQuality === 'well' ? '#1B7C3D' : sleepQuality === 'okay' ? '#E65100' : '#C62828' }"/>
-                      <span class="text-base font-semibold sr-body capitalize">Slept {{ sleepQuality }} last night</span>
+                      <span class="text-base font-semibold text-[#1A1A1A] capitalize">Slept {{ sleepQuality }} last night</span>
                     </div>
-                    <button @click="sleepSubmitted = false; sleepQuality = null" class="text-sm sr-muted hover:underline">Change</button>
+                    <button @click="sleepSubmitted = false; sleepQuality = null" class="text-sm text-[#5A7A9B] hover:underline">Change</button>
                   </div>
                   <div v-if="consecutivePoorSleep" class="bg-[#C62828]/10 border border-[#C62828] rounded-xl p-6 flex gap-3 mb-6">
                     <svg class="flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C62828" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                    <p class="text-sm sr-body font-semibold">Three nights of poor sleep in a row. Please mention this to your GP at your next appointment.</p>
+                    <p class="text-sm text-[#1A1A1A] font-semibold">Three nights of poor sleep in a row. Please mention this to your GP at your next appointment.</p>
                   </div>
                   <button @click="nextCheckInStep" class="w-full bg-[#38bfff] text-[#07090e] py-5 rounded-full font-semibold hover:opacity-90 transition-colors">Continue</button>
                 </div>
@@ -1303,19 +1327,19 @@ const props = defineProps({
               <!-- STEP 2: Symptoms -->
               <div v-else-if="checkInStep === 2" key="symptoms">
                 <div class="text-[#38bfff] text-xs font-semibold tracking-widest uppercase mb-2">Symptoms</div>
-                <h3 class="text-3xl font-bold sr-body mb-3">How are you feeling today?</h3>
-                <p class="sr-muted text-base mb-10">Be honest with yourself. This affects your recovery timeline.</p>
+                <h3 class="text-3xl font-bold text-[#1A1A1A] mb-3">How are you feeling today?</h3>
+                <p class="text-[#5A7A9B] text-base mb-10">Be honest with yourself. This affects your recovery timeline.</p>
 
                 <div v-if="symptomStep === 0" class="text-center">
                   <button @click="startSymptomCheck" class="w-full bg-[#38bfff] text-[#07090e] py-5 rounded-full font-semibold hover:opacity-90 transition-colors">Start symptom check</button>
                 </div>
 
                 <div v-else-if="symptomStep >= 1 && symptomStep <= 3">
-                  <div class="text-sm font-semibold sr-muted uppercase tracking-widest mb-4 text-center">Question {{ symptomStep }} of 3</div>
+                  <div class="text-sm font-semibold text-[#5A7A9B] uppercase tracking-widest mb-4 text-center">Question {{ symptomStep }} of 3</div>
                   <Transition name="slide-up" mode="out-in">
                     <div :key="symptomStep" class="text-center">
-                      <div class="sr-card border-2 border-white/10 rounded-2xl p-8 mb-6">
-                        <h3 class="text-xl font-bold sr-body mb-6">{{ symptomQuestions[symptomStep - 1] }}</h3>
+                      <div class="bg-[#F7F9FC] border-2 border-[#EBEBEB] rounded-2xl p-8 mb-6">
+                        <h3 class="text-xl font-bold text-[#1A1A1A] mb-6">{{ symptomQuestions[symptomStep - 1] }}</h3>
                         <div class="flex gap-4 justify-center">
                           <button @click="answerSymptom(false)" class="flex-1 max-w-[130px] py-4 rounded-full font-bold border-2 border-[#1B7C3D] text-[#1B7C3D] hover:bg-[#1B7C3D] hover:text-white transition-all">No</button>
                           <button @click="answerSymptom(true)" class="flex-1 max-w-[130px] py-4 rounded-full font-bold border-2 border-[#C62828] text-[#C62828] hover:bg-[#C62828] hover:text-white transition-all">Yes</button>
@@ -1331,13 +1355,13 @@ const props = defineProps({
                 <div v-else-if="symptomStep === 4">
                   <div v-if="!hasSymptoms" class="bg-[#1B7C3D]/10 border-2 border-[#1B7C3D] rounded-2xl p-8 text-center mb-6">
                     <svg class="mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#1B7C3D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                    <p class="text-lg font-bold sr-body mb-1">You are clear for today.</p>
-                    <p class="sr-muted text-sm">Continue with your Stage {{ currentStage }} activities as planned.</p>
+                    <p class="text-lg font-bold text-[#1A1A1A] mb-1">You are clear for today.</p>
+                    <p class="text-[#5A7A9B] text-sm">Continue with your Stage {{ currentStage }} activities as planned.</p>
                   </div>
                   <div v-else class="bg-[#C62828]/10 border-2 border-[#C62828] rounded-2xl p-8 text-center mb-6">
                     <svg class="mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C62828" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                    <p class="text-lg font-bold sr-body mb-1">Stop all activity today.</p>
-                    <p class="sr-muted text-sm mb-4">See a GP or sports doctor before you continue.</p>
+                    <p class="text-lg font-bold text-[#1A1A1A] mb-1">Stop all activity today.</p>
+                    <p class="text-[#5A7A9B] text-sm mb-4">See a GP or sports doctor before you continue.</p>
                     <router-link to="/locatesupport" @click="closeCheckIn">
                       <button class="bg-[#C62828] text-white px-6 py-3 rounded-full font-semibold text-sm hover:bg-[#B71C1C] transition-colors flex items-center gap-2 mx-auto">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -1352,8 +1376,8 @@ const props = defineProps({
               <!-- STEP 3: Neck Exercises (Stage 2 and above only) -->
               <div v-else-if="checkInStep === 3 && currentStage && currentStage >= 2" key="exercises">
                 <div class="text-[#38bfff] text-xs font-semibold tracking-widest uppercase mb-2">Neck Exercises</div>
-                <h3 class="text-3xl font-bold sr-body mb-3">Time for your neck exercises</h3>
-                <p class="sr-muted text-sm mb-6">
+                <h3 class="text-3xl font-bold text-[#1A1A1A] mb-3">Time for your neck exercises</h3>
+                <p class="text-[#5A7A9B] text-sm mb-6">
                   You will be taken to a guided exercise page with optional camera support.
                   When you finish, you will come straight back here to write your journal entry.
                 </p>
@@ -1361,15 +1385,15 @@ const props = defineProps({
                 <div class="space-y-3 mb-6">
                   <div
                     v-for="(def, idx) in exerciseDefinitions" :key="idx"
-                    class="sr-card border border-white/10 rounded-xl p-6 flex items-center justify-between"
+                    class="border border-[#EBEBEB] bg-white rounded-xl p-6 flex items-center justify-between"
                   >
                     <div class="flex items-center gap-3">
                       <div class="w-8 h-8 rounded-full bg-[#38bfff]/10 flex items-center justify-center flex-shrink-0">
                         <span class="text-sm font-bold text-[#38bfff]">{{ idx + 1 }}</span>
                       </div>
                       <div>
-                        <p class="text-sm font-bold sr-body">{{ def.name }}</p>
-                        <p class="text-sm sr-muted">{{ def.sets }} sets, {{ def.reps }} reps</p>
+                        <p class="text-sm font-bold text-[#1A1A1A]">{{ def.name }}</p>
+                        <p class="text-sm text-[#5A7A9B]">{{ def.sets }} sets, {{ def.reps }} reps</p>
                       </div>
                     </div>
                   </div>
@@ -1383,7 +1407,7 @@ const props = defineProps({
                   Start neck exercises
                 </button>
 
-                <button @click="nextCheckInStep" class="w-full py-3 rounded-full text-base font-semibold sr-muted hover:sr-body transition-colors">
+                <button @click="nextCheckInStep" class="w-full py-3 rounded-full text-base font-semibold text-[#5A7A9B] hover:text-[#1A1A1A] transition-colors">
                   Skip for now
                 </button>
               </div>
@@ -1391,19 +1415,19 @@ const props = defineProps({
               <!-- STEP 4 (or Step 3 on Stage 1): Journal -->
               <div v-else key="journal">
                 <div class="text-[#38bfff] text-xs font-semibold tracking-widest uppercase mb-2">Recovery Journal</div>
-                <h3 class="text-3xl font-bold sr-body mb-3">Write about your day</h3>
-                <p class="sr-muted text-sm mb-6">One sentence is enough. Saved privately on this device only.</p>
+                <h3 class="text-3xl font-bold text-[#1A1A1A] mb-3">Write about your day</h3>
+                <p class="text-[#5A7A9B] text-sm mb-6">One sentence is enough. Saved privately on this device only.</p>
 
-                <div class="sr-card border border-white/10 rounded-xl p-6 mb-4">
+                <div class="bg-[#F7F9FC] border border-[#EBEBEB] rounded-xl p-6 mb-4">
                   <div class="flex items-center justify-between mb-2">
                     <span class="text-base font-semibold text-[#38bfff]">Day {{ daysSinceInjury }}</span>
-                    <span class="text-sm sr-muted">{{ new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'long' }) }}</span>
+                    <span class="text-sm text-[#5A7A9B]">{{ new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'long' }) }}</span>
                   </div>
                   <textarea
                     v-model="journalEntry"
                     placeholder="How are you feeling? Any symptoms? What did you manage to do today?"
                     rows="3"
-                    class="w-full text-sm sr-body bg-transparent resize-none focus:outline-none leading-relaxed"
+                    class="w-full text-sm text-[#1A1A1A] bg-transparent resize-none focus:outline-none leading-relaxed"
                   />
                 </div>
 
@@ -1413,7 +1437,7 @@ const props = defineProps({
                     :disabled="!journalEntry.trim()"
                     class="flex-1 bg-[#38bfff] text-[#07090e] py-5 rounded-full font-semibold hover:opacity-90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   >{{ journalSaved ? 'Saved!' : 'Save and finish' }}</button>
-                  <button @click="closeCheckIn" class="px-6 py-4 rounded-full text-base font-semibold sr-muted hover:sr-body transition-colors">Skip</button>
+                  <button @click="closeCheckIn" class="px-6 py-4 rounded-full text-base font-semibold text-[#5A7A9B] hover:text-[#1A1A1A] transition-colors">Skip</button>
                 </div>
               </div>
 
@@ -1421,7 +1445,7 @@ const props = defineProps({
           </div>
 
           <div v-if="checkInStep > 1" class="px-10 pb-10">
-            <button @click="prevCheckInStep" class="text-sm sr-muted hover:sr-body transition-colors flex items-center gap-1">
+            <button @click="prevCheckInStep" class="text-sm text-[#5A7A9B] hover:text-[#1A1A1A] transition-colors flex items-center gap-1">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
               Back
             </button>
@@ -1435,7 +1459,7 @@ const props = defineProps({
       <div class="max-w-[1200px] mx-auto px-10">
         <div class="text-center mb-12">
           <h2 class="sr-heading text-4xl font-bold mb-4">Your full recovery journey</h2>
-          <p class="sr-muted">Australian Institute of Sport 2024 mandatory protocol. Click any stage to explore the days inside it.</p>
+          <p class="text-[#5A7A9B]">Australian Institute of Sport 2024 mandatory protocol. Click any stage to explore the days inside it.</p>
         </div>
 
         <div class="space-y-3">
@@ -1447,7 +1471,7 @@ const props = defineProps({
             <button
               @click="toggleStage(stage.id)"
               class="w-full flex items-center justify-between p-7 transition-colors text-left"
-              :class="{ 'bg-[#38bfff] text-[#07090e]': getStageStatus(stage.id) === 'current', 'bg-[#1B7C3D]/10 text-[#1B7C3D]': getStageStatus(stage.id) === 'complete', 'bg-white/5 sr-muted': getStageStatus(stage.id) === 'upcoming' }"
+              :class="{ 'bg-[#38bfff] text-[#07090e]': getStageStatus(stage.id) === 'current', 'bg-[#1B7C3D]/10 text-[#1B7C3D]': getStageStatus(stage.id) === 'complete', 'bg-[#f0f4f8] text-[#5A7A9B]': getStageStatus(stage.id) === 'upcoming' }"
             >
               <div class="flex items-center gap-4">
                 <div
@@ -1455,7 +1479,7 @@ const props = defineProps({
                   :class="{ 'bg-[#07090e]/10': getStageStatus(stage.id) === 'current', 'bg-[#1B7C3D]': getStageStatus(stage.id) === 'complete', 'bg-[#EBEBEB]': getStageStatus(stage.id) === 'upcoming' }"
                 >
                   <svg v-if="getStageStatus(stage.id) === 'complete'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                  <span v-else class="text-sm font-black" :class="{ 'text-[#07090e]': getStageStatus(stage.id) === 'current', 'sr-muted': getStageStatus(stage.id) === 'upcoming' }">{{ stage.id }}</span>
+                  <span v-else class="text-sm font-black" :class="{ 'text-[#07090e]': getStageStatus(stage.id) === 'current', 'text-[#5A7A9B]': getStageStatus(stage.id) === 'upcoming' }">{{ stage.id }}</span>
                 </div>
                 <div>
                   <div class="font-bold text-base">{{ stage.name }}</div>
@@ -1465,7 +1489,7 @@ const props = defineProps({
               <div class="flex items-center gap-3">
                 <span
                   class="text-sm font-bold px-3 py-1 rounded-full"
-                  :class="{ 'bg-[#07090e]/10 text-[#07090e]': getStageStatus(stage.id) === 'current', 'bg-[#1B7C3D] text-white': getStageStatus(stage.id) === 'complete', 'bg-[#5A7A9B]/20 sr-muted': getStageStatus(stage.id) === 'upcoming' }"
+                  :class="{ 'bg-[#07090e]/10 text-[#07090e]': getStageStatus(stage.id) === 'current', 'bg-[#1B7C3D] text-white': getStageStatus(stage.id) === 'complete', 'bg-[#5A7A9B]/20 text-[#5A7A9B]': getStageStatus(stage.id) === 'upcoming' }"
                 >{{ getStageStatus(stage.id).toUpperCase() }}</span>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="transition-transform duration-200" :class="expandedStage === stage.id ? 'rotate-180' : ''"><path d="m6 9 6 6 6-6"/></svg>
               </div>
@@ -1477,23 +1501,23 @@ const props = defineProps({
                   <button
                     v-for="dayEntry in getDaysForStage(stage.id)" :key="dayEntry.day"
                     @click="jumpToDay(dayEntry.day)"
-                    class="text-left sr-card border rounded-xl p-6 hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
-                    :class="dayEntry.day === daysSinceInjury ? 'border-[#38bfff] bg-[#38bfff]/5' : 'border-white/10'"
+                    class="text-left bg-white border rounded-xl p-6 hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
+                    :class="dayEntry.day === daysSinceInjury ? 'border-[#38bfff] bg-[#F5F8FF]' : 'border-[#EBEBEB]'"
                   >
                     <div class="flex items-center justify-between mb-2">
                       <span class="text-sm font-bold text-[#38bfff]">Day {{ dayEntry.day }}</span>
                       <span
                         class="text-sm font-bold px-2 py-0.5 rounded-full"
-                        :class="dayEntry.day < (daysSinceInjury || 0) ? 'bg-[#1B7C3D]/10 text-[#1B7C3D]' : dayEntry.day === daysSinceInjury ? 'bg-[#38bfff] text-[#07090e]' : 'bg-[#EBEBEB] sr-muted'"
+                        :class="dayEntry.day < (daysSinceInjury || 0) ? 'bg-[#1B7C3D]/10 text-[#1B7C3D]' : dayEntry.day === daysSinceInjury ? 'bg-[#38bfff] text-[#07090e]' : 'bg-[#EBEBEB] text-[#5A7A9B]'"
                       >{{ dayEntry.day < (daysSinceInjury || 0) ? 'Done' : dayEntry.day === daysSinceInjury ? 'Today' : 'Upcoming' }}</span>
                     </div>
                     <div class="flex items-center gap-2 mb-2">
                       <div class="h-1.5 flex-1 bg-[#EBEBEB] rounded-full overflow-hidden">
                         <div class="h-full rounded-full" :style="{ width: `${dayEntry.brainRecoveryPct}%`, background: dayEntry.brainRecoveryPct < 40 ? '#C62828' : dayEntry.brainRecoveryPct < 70 ? '#E65100' : '#1B7C3D' }"/>
                       </div>
-                      <span class="text-sm font-bold sr-muted">{{ dayEntry.brainRecoveryPct }}%</span>
+                      <span class="text-sm font-bold text-[#5A7A9B]">{{ dayEntry.brainRecoveryPct }}%</span>
                     </div>
-                    <p class="text-sm sr-muted leading-relaxed line-clamp-2">{{ dayEntry.dailyGoal }}</p>
+                    <p class="text-sm text-[#5A7A9B] leading-relaxed line-clamp-2">{{ dayEntry.dailyGoal }}</p>
                     <p class="text-xs text-[#38bfff] font-semibold mt-2">View this day</p>
                   </button>
                 </div>
@@ -1504,7 +1528,125 @@ const props = defineProps({
       </div>
     </section>
 
-    <!-- SUPPORT CTA -->
+  <!-- PROGRESS LOG -->
+<section v-if="progressLog.length > 0" class="sr-s3 py-16">
+  <div class="max-w-[1200px] mx-auto px-10">
+
+    <!-- Header + toggle -->
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <h2 class="text-2xl font-bold text-[#1A1A1A]">My progress log</h2>
+        <p class="text-sm text-[#5A7A9B] mt-1">Everything you have tracked so far, grouped by day.</p>
+      </div>
+      <button
+        @click="showProgressLog = !showProgressLog"
+        class="inline-flex items-center gap-2 border border-[#38bfff] text-[#38bfff] px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-[#38bfff] hover:text-[#07090e] transition-colors"
+      >
+        {{ showProgressLog ? 'Hide log' : 'Show log' }}
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+          class="transition-transform duration-200" :class="showProgressLog ? 'rotate-180' : ''">
+          <path d="m6 9 6 6 6-6"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Day cards -->
+    <Transition name="slide-up">
+      <div v-if="showProgressLog" class="space-y-4">
+        <div
+          v-for="entry in progressLog" :key="entry.day"
+          class="bg-white rounded-2xl border border-[#EBEBEB] shadow-sm overflow-hidden"
+        >
+          <!-- Card header -->
+          <div class="flex items-center gap-4 px-6 py-4 border-b border-[#EBEBEB] bg-[#f8fbff]">
+            <div class="w-10 h-10 rounded-full bg-[#38bfff] flex items-center justify-center flex-shrink-0">
+              <span class="text-sm font-black text-[#07090e]">{{ entry.day }}</span>
+            </div>
+            <div>
+              <span class="text-sm font-bold text-[#1A1A1A]">Day {{ entry.day }}</span>
+              <span class="text-xs text-[#5A7A9B] ml-2">{{ dayData[Math.min(entry.day, 21)]?.stageName }}</span>
+            </div>
+          </div>
+
+          <!-- Card body — log rows -->
+          <div class="px-6 py-5 space-y-4">
+
+            <!-- Sleep -->
+            <div v-if="entry.sleep" class="flex items-start gap-3">
+              <div class="w-8 h-8 rounded-lg bg-[#EBF5FF] flex items-center justify-center flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                  fill="none" stroke="#38bfff" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+              </div>
+              <div>
+                <p class="text-xs font-semibold text-[#5A7A9B] uppercase tracking-wide mb-0.5">Sleep</p>
+                <div class="flex items-center gap-2">
+                  <div
+                    class="w-2 h-2 rounded-full"
+                    :style="{ background: entry.sleep.quality === 'well' ? '#1B7C3D' : entry.sleep.quality === 'okay' ? '#E65100' : '#C62828' }"
+                  />
+                  <span class="text-sm font-medium text-[#1A1A1A] capitalize">Slept {{ entry.sleep.quality }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cognitive test -->
+            <div v-if="entry.cognitive" class="flex items-start gap-3">
+              <div class="w-8 h-8 rounded-lg bg-[#EBF5FF] flex items-center justify-center flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                  fill="none" stroke="#38bfff" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              </div>
+              <div>
+                <p class="text-xs font-semibold text-[#5A7A9B] uppercase tracking-wide mb-0.5">Digit span test</p>
+                <div class="flex items-center gap-2">
+                  <span
+                    class="text-xs font-bold px-2 py-0.5 rounded-full"
+                    :class="entry.cognitive.correct ? 'bg-[#1B7C3D]/10 text-[#1B7C3D]' : 'bg-[#C62828]/10 text-[#C62828]'"
+                  >{{ entry.cognitive.correct ? 'Correct' : 'Incorrect' }}</span>
+                  <span class="text-sm text-[#5A7A9B]">{{ entry.cognitive.length }} digit sequence</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Reaction time -->
+            <div v-if="entry.reaction" class="flex items-start gap-3">
+              <div class="w-8 h-8 rounded-lg bg-[#EBF5FF] flex items-center justify-center flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                  fill="none" stroke="#38bfff" stroke-width="2" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              </div>
+              <div>
+                <p class="text-xs font-semibold text-[#5A7A9B] uppercase tracking-wide mb-0.5">Reaction time</p>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-bold text-[#38bfff]">{{ entry.reaction.avg }}ms</span>
+                  <span
+                    class="text-xs font-medium"
+                    :style="{ color: entry.reaction.avg < 250 ? '#1B7C3D' : entry.reaction.avg < 350 ? '#38bfff' : entry.reaction.avg < 450 ? '#E65100' : '#C62828' }"
+                  >{{ entry.reaction.avg < 250 ? 'Excellent' : entry.reaction.avg < 350 ? 'Good' : entry.reaction.avg < 450 ? 'Fair' : 'Still recovering' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Journal -->
+            <div v-if="entry.journal" class="flex items-start gap-3">
+              <div class="w-8 h-8 rounded-lg bg-[#EBF5FF] flex items-center justify-center flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                  fill="none" stroke="#38bfff" stroke-width="2" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+              </div>
+              <div class="flex-1">
+                <p class="text-xs font-semibold text-[#5A7A9B] uppercase tracking-wide mb-0.5">Journal</p>
+                <p class="text-sm text-[#1A1A1A] leading-relaxed italic">"{{ entry.journal.text }}"</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+  </div>
+</section>
+
+    <!-- SUPPORT CTA — always dark -->
     <section style="background:#0A1628;" class="py-20 text-center">
       <div class="max-w-[1200px] mx-auto px-10">
         <h2 class="text-3xl font-bold text-white mb-4">Not sure if you are ready?</h2>
@@ -1524,52 +1666,29 @@ const props = defineProps({
 
 
 <style>
-/* ━━ ROOT ━━ */
-.sr-root { background: #07090e; }
-body.light .sr-root { background: #f0f4f8; }
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   All colours hardcoded — toggle has zero effect.
+   Hero and Support CTA stay dark via inline/scoped styles.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
-/* ━━ SECTION BACKGROUNDS ━━ */
-.sr-s1 { background: #07090e; }
-.sr-s2 { background: #0d1828; }
-.sr-s3 { background: #0a1220; }
-.sr-s4 { background: #07090e; }
+/* Root — always light */
+.sr-root { background: #f0f4f8; }
 
-body.light .sr-s1 { background: #ffffff; }
-body.light .sr-s2 { background: #EBF5FF; }
-body.light .sr-s3 { background: #ffffff; }
-body.light .sr-s4 { background: #EBF5FF; }
+/* Section backgrounds — hardcoded, alternating light */
+.sr-s1 { background: #ffffff; }
+.sr-s2 { background: #EBF5FF; }
+.sr-s3 { background: #ffffff; }
+.sr-s4 { background: #EBF5FF; }
 
-/* ━━ CARDS — always white ━━ */
+/* Cards — always white */
 .sr-card { background: #ffffff; }
 
-/* ━━ TEXT ON DARK SECTION BACKGROUNDS ━━ */
-.sr-heading { color: #ffffff; }
-.sr-muted   { color: rgba(255,255,255,0.45); }
-.sr-body    { color: rgba(255,255,255,0.85); }
+/* Text — always dark */
+.sr-heading { color: #1A1A1A; }
+.sr-muted   { color: #5A7A9B; }
+.sr-body    { color: #1A1A1A; }
 
-/* ━━ TEXT IN LIGHT MODE (sections turn light) ━━ */
-body.light .sr-heading { color: #1A1A1A; }
-body.light .sr-muted   { color: #5A7A9B; }
-body.light .sr-body    { color: #1A1A1A; }
-
-/* ━━ TEXT INSIDE CARDS — always dark (cards always white) ━━ */
-.sr-card .sr-heading,
-.sr-card h2,
-.sr-card h3,
-.sr-card h4 { color: #1A1A1A; }
-
-.sr-card .sr-muted,
-.sr-card .sr-body,
-.sr-card p,
-.sr-card span { color: #1A1A1A; }
-
-/* keep ice blue and semantic colours untouched inside cards */
-.sr-card .text-\[#38bfff\] { color: #38bfff !important; }
-.sr-card .text-\[#1B7C3D\] { color: #1B7C3D !important; }
-.sr-card .text-\[#C62828\] { color: #C62828 !important; }
-.sr-card .text-\[#E65100\] { color: #E65100 !important; }
-
-/* ━━ ACTIVITY CARDS — semantic tints, always light ━━ */
+/* Activity card tints */
 .sr-card-green { background: #F5FFF7; }
 .sr-card-red   { background: #FFF5F5; }
 </style>
