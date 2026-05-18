@@ -9,6 +9,16 @@ import {
 import axios from 'axios'
 
 ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, CategoryScale, LinearScale)
+// Close dropdowns when clicking outside
+const vClickOutside = {
+  mounted(el, binding) {
+    el._clickOutside = (e) => { if (!el.contains(e.target)) binding.value(e) }
+    document.addEventListener('click', el._clickOutside)
+  },
+  unmounted(el) {
+    document.removeEventListener('click', el._clickOutside)
+  }
+}
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // BRAIN REGIONS
@@ -50,6 +60,7 @@ const ageGroupDropdown = ref([])
 const sportsType       = ref('Australian Rules Football')
 const ageGroup         = ref('15-24')
 const filtersApplied   = ref(false)
+const sportDropdownOpen = ref(false)
 
 const loadingDropdowns  = ref(false)
 const loadingSports     = ref(false)
@@ -328,14 +339,14 @@ onMounted(async () => {
 
       <div class="kyr-stat-card">
         <span class="kyr-stat-big">1 in 3</span>
-        <span class="kyr-stat-title">Young Victorians</span>
-        <span class="kyr-stat-desc">Hospitalisations involve someone aged 15 to 24 — the highest risk age group in Australian community sport.</span>
+        <span class="kyr-stat-title">Young Australians</span>
+        <span class="kyr-stat-desc">Hospitalisations involve someone aged 15 to 24 as the highest risk age group in Australian community sport.</span>
       </div>
 
       <div class="kyr-stat-card">
         <span class="kyr-stat-big" style="color:#38bfff;">10 yrs</span>
         <span class="kyr-stat-title">Of real data</span>
-        <span class="kyr-stat-desc">Every chart on this page is built from a decade of Victorian hospital records — not estimates, not surveys.</span>
+        <span class="kyr-stat-desc">Every chart on this page is built from a decade of Australian hospital records — not estimates, not surveys.</span>
       </div>
 
       <div class="kyr-stat-card">
@@ -353,7 +364,7 @@ onMounted(async () => {
       Full width two-column layout. Left = selector + context. Right = visual.
       Dropdown triggers fetch on @change. No button needed.
     ══════════════════════════════════════════════════════════════════════════ -->
-    <section class="bg-white py-24">
+    <section class="py-24" style="background:#EBF3FF;">
       <div class="max-w-[1200px] mx-auto px-10">
 
         <div class="mb-3">
@@ -366,44 +377,79 @@ onMounted(async () => {
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-          <!-- Left: selector + context text -->
-          <div class="flex flex-col justify-between">
-            <div>
-              <p class="text-[#5A7A9B] text-lg leading-relaxed mb-8">Select your sport and the body diagram on the right updates immediately to show the real hospitalisation split between male and female players in Victorian community sport.</p>
+  <!-- Left: selector + context text -->
+  <div class="flex flex-col justify-between">
+    <div>
+      <p class="text-[#5A7A9B] text-lg leading-relaxed mb-8">Select your sport and the body diagram on the right updates immediately to show the real hospitalisation split between male and female players in Australian community sport.</p>
 
-              <!-- Sport dropdown — no button, updates on change -->
-              <div class="relative mb-8">
-                <select
-                  v-if="sportsDropdown.length"
-                  v-model="sportsType"
-                  @change="applyFilters"
-                  class="w-full appearance-none bg-white border-2 border-[#1A4FAB] rounded-2xl px-6 py-5 text-[#1A1A1A] text-lg font-semibold focus:outline-none transition-colors pr-12"
-                >
-                  <option v-for="s in sportsDropdown" :key="s.sport_name" :value="s.sport_name">{{ s.sport_name }}</option>
-                </select>
-                <div v-else class="bg-white border-2 border-[#EBEBEB] rounded-2xl px-6 py-5 text-[#5A7A9B]">
-                  <span v-if="loadingDropdowns" class="animate-pulse">Loading sports...</span>
-                </div>
-                <svg class="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A4FAB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-              </div>
+      <!-- White card wrapping dropdown + callouts -->
+      <div class="bg-white rounded-3xl p-8 shadow-sm border border-[#EBEBEB]">
 
-              <!-- Context callouts -->
-              <div class="space-y-4">
-                <div class="flex items-start gap-4 bg-[#F7F9FC] rounded-2xl p-5 border border-[#EBEBEB]">
-                  <div class="w-10 h-10 rounded-xl bg-[#1A4FAB]/10 flex items-center justify-center flex-shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A4FAB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                  </div>
-                  <p class="text-sm text-[#1A1A1A] leading-relaxed">These numbers are raw hospitalisation counts. To understand relative risk per player, scroll down to the sport risk ladder below.</p>
-                </div>
-                <div class="flex items-start gap-4 bg-[#F7F9FC] rounded-2xl p-5 border border-[#EBEBEB]">
-                  <div class="w-10 h-10 rounded-xl bg-[#E65100]/10 flex items-center justify-center flex-shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E65100" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                  </div>
-                  <p class="text-sm text-[#1A1A1A] leading-relaxed">Male players are hospitalised more often across almost every sport. But female rates have been rising every year for a decade.</p>
-                </div>
-              </div>
+        <!-- Sport dropdown -->
+
+<div class="relative mb-8" v-click-outside="() => sportDropdownOpen = false">
+
+  <!-- Trigger button -->
+  <button
+    type="button"
+    @click="sportDropdownOpen = !sportDropdownOpen"
+    class="w-full flex items-center justify-between bg-white border-2 rounded-2xl px-6 py-5 text-left transition-colors focus:outline-none"
+    :class="sportDropdownOpen ? 'border-[#1A4FAB]' : 'border-[#EBEBEB] hover:border-[#1A4FAB]'"
+  >
+    <span v-if="loadingDropdowns" class="text-[#5A7A9B] text-lg animate-pulse">Loading sports...</span>
+    <span v-else class="text-[#1A1A1A] text-lg font-semibold">{{ sportsType }}</span>
+    <svg
+      class="flex-shrink-0 transition-transform duration-200"
+      :class="sportDropdownOpen ? 'rotate-180' : ''"
+      xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+      fill="none" stroke="#1A4FAB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+    ><path d="m6 9 6 6 6-6"/></svg>
+  </button>
+
+  <!-- Options list -->
+  <div
+    v-show="sportDropdownOpen && sportsDropdown.length"
+    class="absolute z-50 w-full mt-2 bg-white border border-[#EBEBEB] rounded-2xl shadow-xl overflow-hidden"
+  >
+    <ul class="max-h-64 overflow-y-auto py-2">
+      <li
+        v-for="s in sportsDropdown"
+        :key="s.sport_name"
+        @click="sportsType = s.sport_name; sportDropdownOpen = false; applyFilters()"
+        class="flex items-center justify-between px-6 py-3 cursor-pointer transition-colors text-sm font-medium"
+        :class="sportsType === s.sport_name
+          ? 'bg-[#EBF3FF] text-[#1A4FAB] font-semibold'
+          : 'text-[#1A1A1A] hover:bg-[#F7F9FC]'"
+      >
+        <span>{{ s.sport_name }}</span>
+        <svg v-if="sportsType === s.sport_name" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1A4FAB" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+      </li>
+    </ul>
+  </div>
+
+</div>
+
+        <!-- Context callouts -->
+        <div class="space-y-4">
+          <div class="flex items-start gap-4 bg-[#F7F9FC] rounded-2xl p-5 border border-[#EBEBEB]">
+            <div class="w-10 h-10 rounded-xl bg-[#1A4FAB]/10 flex items-center justify-center flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A4FAB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             </div>
+            <p class="text-sm text-[#1A1A1A] leading-relaxed">These numbers are raw hospitalisation counts. To understand relative risk per player, scroll down to the sport risk ladder below.</p>
           </div>
+          <div class="flex items-start gap-4 bg-[#F7F9FC] rounded-2xl p-5 border border-[#EBEBEB]">
+            <div class="w-10 h-10 rounded-xl bg-[#E65100]/10 flex items-center justify-center flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E65100" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <p class="text-sm text-[#1A1A1A] leading-relaxed">Male players are hospitalised more often across almost every sport. But female rates have been rising every year for a decade.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: body fill visualization stays here, unchanged -->
 
           <!-- Right: body fill visualization -->
           <div class="bg-[#0A1628] rounded-3xl p-10 text-white">
@@ -581,7 +627,7 @@ onMounted(async () => {
       <!-- Left: icon row as selector + context -->
       <div class="flex flex-col justify-between">
         <div>
-          <p class="text-[#5A7A9B] text-lg leading-relaxed mb-8">Tap any age group below to see the exact hospitalisation numbers for that bracket across all Victorian community sport.</p>
+          <p class="text-[#5A7A9B] text-lg leading-relaxed mb-8">Tap any age group below to see the exact hospitalisation numbers for that bracket across all Australian community sport.</p>
 
           <!-- Icon row as interactive filter -->
           <div class="bg-[#F7F9FC] rounded-3xl p-8 border border-[#EBEBEB] mb-6">
@@ -621,13 +667,13 @@ onMounted(async () => {
                 </div>
               </button>
             </div>
-            <p class="text-xs text-[#5A7A9B] text-center mt-6">Approximate proportions based on AIHW Victorian data 2023-24</p>
+            <p class="text-xs text-[#5A7A9B] text-center mt-6">Approximate proportions based on AIHW Australian data 2023-24</p>
           </div>
 
           <!-- Total stat -->
           <div class="bg-[#F7F9FC] rounded-2xl p-6 border border-[#EBEBEB]">
             <div class="text-4xl font-black text-[#1A4FAB] mb-1" style="letter-spacing:-0.03em;">{{ ageTotal }}</div>
-            <p class="text-[#5A7A9B] text-sm">total hospitalisations across all Victorian community sport for the {{ ageGroup }} age bracket</p>
+            <p class="text-[#5A7A9B] text-sm">total hospitalisations across all Australian community sport for the {{ ageGroup }} age bracket</p>
           </div>
         </div>
       </div>
