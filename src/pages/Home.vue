@@ -69,7 +69,7 @@ const barsVisible = ref(false)
 <template>
   <div>
 
-    <!-- HERO — always dark -->
+    <!-- HERO - always dark -->
     <section class="hero">
       <div class="hero-overlay" />
       <div class="hero-lines" />
@@ -105,7 +105,7 @@ const barsVisible = ref(false)
               </button>
             </router-link>
             <router-link to="/locatesupport">
-              <button class="btn-primary">Find Support →</button>
+              <button class="btn-primary">Find Support -></button>
             </router-link>
           </div>
         </div>
@@ -129,7 +129,7 @@ const barsVisible = ref(false)
     </section>
 
 
-    <!-- STATS — always light blue -->
+    <!-- STATS - always light blue -->
     <div class="stats-section">
       <div class="stats-row" id="statsRow">
         <div class="stat-item">
@@ -147,7 +147,7 @@ const barsVisible = ref(false)
           </div>
         </div>
         <div class="stat-item">
-          <span class="stat-num" data-target="5" data-suffix="×">0×</span>
+          <span class="stat-num" data-target="5" data-suffix="x">0x</span>
           <div class="stat-desc">
             <strong>Re-injury risk</strong>
             Higher re-injury risk when returning during the recovery window.
@@ -157,7 +157,7 @@ const barsVisible = ref(false)
     </div>
 
 
-    <!-- WHERE ARE YOU RIGHT NOW? — always light -->
+    <!-- WHERE ARE YOU RIGHT NOW? - always light -->
     <section class="section bg-light fade-up">
       <div class="container">
         <div class="eyebrow">Get Started</div>
@@ -209,7 +209,7 @@ const barsVisible = ref(false)
     </section>
 
 
-    <!-- DAY 7 TRAP — always dark navy -->
+    <!-- DAY 7 TRAP - always dark navy -->
     <section class="section bg-deep fade-up">
       <div class="container">
         <div class="recovery-grid">
@@ -282,7 +282,7 @@ const barsVisible = ref(false)
     </section>
 
 
-    <!-- FOOTBALL ANIMATION — always lighter blue -->
+    <!-- FOOTBALL ANIMATION - always lighter blue -->
     <section class="section bg-lighter fade-up">
       <div class="container">
         <div class="lottie-grid">
@@ -324,9 +324,9 @@ const barsVisible = ref(false)
                 <path d="M148 210 Q155 215 162 210" stroke="#333" stroke-width="2" fill="none" stroke-linecap="round" class="fp-mouth"/>
                 <path d="M133 198 Q135 178 155 177 Q175 178 177 198" fill="#3a1a00"/>
                 <g class="fp-stars">
-                  <text x="128" y="178" font-size="14" fill="#ffd700">★</text>
-                  <text x="153" y="171" font-size="14" fill="#ffaa00">★</text>
-                  <text x="178" y="178" font-size="14" fill="#ffd700">★</text>
+                  <text x="128" y="178" font-size="24" fill="#ffd700">*</text>
+                  <text x="153" y="171" font-size="24" fill="#ffaa00">*</text>
+                  <text x="178" y="178" font-size="24" fill="#ffd700">*</text>
                 </g>
                 <g class="fp-dizzy">
                   <circle cx="148" cy="199" r="5" fill="#ff6600" class="fp-dizzy-eye-l"/>
@@ -379,11 +379,11 @@ const barsVisible = ref(false)
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/* 
    All colours are hardcoded below.
    The dark/light toggle on the navbar has zero effect
    on this page.
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+ */
 
 .always-ice { color: #38bfff !important; }
 
@@ -429,9 +429,9 @@ const barsVisible = ref(false)
 }
 .btn-white:hover { opacity: 0.9; }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/*
    HERO
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+*/
 .hero {
   position: relative; min-height: 100vh;
   display: flex; align-items: center;
@@ -484,9 +484,9 @@ const barsVisible = ref(false)
 .ekg-svg { width: 200%; height: 100%; animation: ekgScroll 3s linear infinite; }
 @keyframes ekgScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/* 
    STATS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+*/
 .stats-section { background: #e8f3ff; }
 .stats-row { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(3,1fr); }
 .stat-item { padding: 56px 40px; text-align: center; position: relative; transition: background 0.3s; }
@@ -504,9 +504,8 @@ const barsVisible = ref(false)
 .stat-desc { font-size: 13px; font-weight: 300; color: #4a6882; line-height: 1.6; }
 .stat-desc strong { display: block; color: #0a1628; font-weight: 600; font-size: 15px; margin-bottom: 4px; }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   PATH CARDS — white default, dark navy on hover
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* 
+   PATH CARDS - white default, dark navy on hover */
 .path-grid {
   display: grid; grid-template-columns: 1fr 1fr;
   gap: 1px; background: rgba(56,191,255,0.15);
@@ -533,9 +532,8 @@ const barsVisible = ref(false)
 .path-title { font-size: 28px; font-weight: 800; color: #0a1628; letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 16px; transition: color 0.25s; }
 .path-desc  { font-size: 14px; font-weight: 300; color: #4a6882; line-height: 1.75; margin-bottom: 32px; max-width: 380px; transition: color 0.25s; }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   DAY 7 SECTION
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* 
+   DAY 7 SECTION */
 .recovery-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
 .recovery-title { font-size: clamp(32px,5vw,52px); font-weight: 900; letter-spacing: -0.03em; line-height: 1.05; color: white; margin-bottom: 24px; }
 .recovery-body  { font-size: 15px; font-weight: 300; color: rgba(255,255,255,0.6); line-height: 1.75; margin-bottom: 14px; }
@@ -555,9 +553,9 @@ const barsVisible = ref(false)
 .trap-text      { font-size: 13px; color: rgba(255,255,255,0.75); line-height: 1.6; }
 .trap-text strong { color: #38bfff; }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/* 
    FOOTBALL ANIMATION
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+ */
 .lottie-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
 .fp-wrap {
   position: relative; border-radius: 20px; overflow: hidden;
@@ -620,9 +618,9 @@ const barsVisible = ref(false)
   70%, 100% { transform: rotate(0deg); }
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/* 
    CTA
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+ */
 .cta-section { background: #07090e; padding: 112px 24px; }
 .cta-inner   { text-align: center; }
 .cta-eyebrow { font-size: 11px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase; color: rgba(255,255,255,0.28); margin-bottom: 32px; }

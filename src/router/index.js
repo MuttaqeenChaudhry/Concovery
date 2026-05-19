@@ -1,11 +1,10 @@
 import CRTResources from "@/pages/CRTResources.vue";
 import KnowYourRisk from "@/pages/KnowYourRisk.vue";
 import LocateSupportPage from "@/pages/LocateSupportPage.vue";
-import RTPRule from "@/pages/RTPRule.vue";
-import StagedRecovery2 from "@/pages/StagedRecovery2.vue";
 import ExercisePage from "@/pages/ExercisePage.vue";
 import { createRouter, createWebHistory } from "vue-router";
 import Home from "@/pages/Home.vue";
+import StagedRecovery from "@/pages/StagedRecovery.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -35,15 +34,9 @@ const router = createRouter({
       meta: { title: "CRT Resources" },
     },
     {
-      path: "/rtprule",
-      name: "21-Day Rule",
-      component: RTPRule,
-      meta: { title: "21-Day Rule" },
-    },
-    {
       path: "/iteration3/stagedrecovery",
       name: "Staged Recovery",
-      component: StagedRecovery2,
+      component: StagedRecovery,
       meta: { title: "Staged Recovery" },
     },
     {
