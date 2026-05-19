@@ -14,12 +14,12 @@ import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import mapboxgl               from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 
-// ─── Environment variables ────────────────────────────────────────────────────
+//Environment variables
 const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY
 const MAPBOX_TOKEN   = import.meta.env.VITE_MAPBOX_TOKEN
 const BACKEND_URL    = 'https://site--concovery-backend--gvxxw7q2vn57.code.run'
 
-// ─── Marker colours by clinic type ───────────────────────────────────────────
+//Marker colours by clinic type
 const CLINIC_COLOURS = {
   'GP':              '#1A4FAB',
   'Sports Medicine': '#1B7C3D',
@@ -50,12 +50,12 @@ const radiusKm           = ref(5)
 const mapDiv             = ref(null)
 
 // Location concepts (kept separate on purpose):
-//   gpsPosition  → where the user physically IS (blue dot on map, GPS only)
-//   searchCentre → where we search around (typed suburb OR gps position)
+//   gpsPosition   where the user physically IS (blue dot on map, GPS only)
+//   searchCentre  where we search around (typed suburb OR gps position)
 const gpsPosition   = ref(null)
 const searchCentre  = ref(null)
 
-// Mapbox objects — not reactive because Vue doesn't need to track them
+// Mapbox objects - not reactive because Vue doesn't need to track them
 let map        = null
 let mapMarkers = []
 
@@ -81,7 +81,7 @@ function distanceKm(lat1, lng1, lat2, lng2) {
 
 /**
  * Filters allResults by the current radiusKm and re-draws map pins.
- * Called on slider drag — instant, no network request.
+ * Called on slider drag - instant, no network request.
  */
 function applyRadiusFilter() {
   if (!allResults.value || !searchCentre.value) return
@@ -476,9 +476,9 @@ onUnmounted(() => {
 <template>
   <div class="bg-white min-h-screen">
 
-    <!-- ══════════════════════════════════════════════════════════════════════
+    <!--
       HERO SECTION
-    ══════════════════════════════════════════════════════════════════════════ -->
+    -->
     <section class="fs-hero text-white">
       <div class="fs-hero-lines"></div>
       <div class="fs-hero-edge"></div>
@@ -494,7 +494,7 @@ onUnmounted(() => {
             HELP <span style="color:#38bfff;">NEAR YOU.</span>
           </h1>
           <p class="text-white/55 text-lg font-light max-w-lg leading-relaxed">
-            A concussion needs a real doctor, not a search engine. Use this tool to find GPs, sports medicine clinics and hospitals within reach — before you need them in a hurry.
+            A concussion needs a real doctor, not a search engine. Use this tool to find GPs, sports medicine clinics and hospitals within reach - before you need them in a hurry.
           </p>
         </BlurReveal>
       </div>
@@ -519,16 +519,16 @@ onUnmounted(() => {
 
 
 
-    <!-- ══════════════════════════════════════════════════════════════════════
+    <!-- 
       FULL-SCREEN MAP WITH FLOATING PANEL
-    ══════════════════════════════════════════════════════════════════════════ -->
+     -->
     <section class="relative p-3" style="height:calc(100vh - 80px); min-height:680px; background: linear-gradient(160deg, #EBF3FF 0%, #DEF0FF 50%, #EBF3FF 100%);">
 
-      <!-- Map — inset with rounded corners -->
+      <!-- Map - inset with rounded corners -->
       <div class="relative w-full h-full rounded-3xl overflow-hidden shadow-xl">
         <div ref="mapDiv" style="width:100%;height:100%;" />
 
-        <!-- Recenter button — bottom right of the map -->
+        <!-- Recenter button - bottom right of the map -->
         <button
           v-if="searchCentre"
           @click="initMap(searchCentre.lat, searchCentre.lng)"
@@ -545,10 +545,10 @@ onUnmounted(() => {
 
       </div>
 
-      <!-- Floating panel — overlays on left, contains search + results -->
+      <!-- Floating panel - overlays on left, contains search + results -->
       <div class="absolute top-5 left-5 bottom-5 z-20 flex flex-col rounded-3xl overflow-hidden shadow-2xl" style="width:420px; background: rgba(255,255,255,0.96); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
 
-        <!-- ── Panel top: label + search ── -->
+        <!-- Panel top: label + search -->
         <div class="flex-shrink-0 px-6 pt-6 pb-4">
 
           <!-- Label row -->
@@ -607,7 +607,7 @@ onUnmounted(() => {
             <span class="text-[#C62828] text-xs font-medium">{{ errors.general }}</span>
           </div>
 
-          <!-- Legend — appears once results are loaded -->
+          <!-- Legend ~ appears once results are loaded -->
           <div v-if="shownResults" class="flex flex-wrap gap-3 mt-4 pt-4 border-t border-[#EBEBEB]">
             <div v-for="(colour, type) in CLINIC_COLOURS" :key="type" class="flex items-center gap-1.5">
               <div class="w-2.5 h-2.5 rounded-full flex-shrink-0" :style="{ background: colour }"/>
@@ -619,7 +619,7 @@ onUnmounted(() => {
         <!-- Divider -->
         <div class="h-px bg-[#EBEBEB] flex-shrink-0 mx-4"/>
 
-        <!-- ── Scrollable results ── -->
+        <!-- Scrollable results -->
         <div class="flex-1 overflow-y-auto px-4 py-4">
           <div class="space-y-2">
 
@@ -688,9 +688,9 @@ onUnmounted(() => {
       </div><!-- end rounded map wrapper -->
     </section>
 
-    <!-- ══════════════════════════════════════════════════════════════════════
+    <!-- 
       FOOTER CTA
-    ══════════════════════════════════════════════════════════════════════════ -->
+    -->
     <section style="background:#0A1628;" class="py-12">
       <div class="max-w-[1200px] mx-auto px-10">
 
@@ -704,7 +704,7 @@ onUnmounted(() => {
               </div>
               <div>
                 <h3 class="text-xl font-bold text-white mb-1">Can't find a nearby clinic? Call Healthdirect.</h3>
-                <p class="text-white/70 text-sm">Free 24/7 health advice — a nurse or GP will help you find local support after a concussion.</p>
+                <p class="text-white/70 text-sm">Free 24/7 health advice - a nurse or GP will help you find local support after a concussion.</p>
               </div>
             </div>
             <div class="flex items-center gap-2 text-white font-bold text-lg whitespace-nowrap flex-shrink-0">
@@ -725,13 +725,13 @@ onUnmounted(() => {
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
 
-/* ━━ TRANSITIONS ━━ */
+/* TRANSITIONS */
 .fade-up-enter-active { transition: opacity 0.4s ease, transform 0.4s ease; }
 .fade-up-leave-active { transition: opacity 0.2s ease; }
 .fade-up-enter-from   { opacity: 0; transform: translateY(14px); }
 .fade-up-leave-to     { opacity: 0; }
 
-/* ━━ HERO ━━ */
+/* HERO */
 .fs-hero {
   position: relative;
   background: #07090e;
@@ -774,7 +774,7 @@ onUnmounted(() => {
   background: linear-gradient(to bottom, transparent, #38bfff 40%, #38bfff 60%, transparent);
 }
 
-/* ━━ EKG ━━ */
+/* EKG */
 .fs-ekg {
   position: absolute;
   bottom: 0; left: 0; right: 0;
@@ -789,7 +789,7 @@ onUnmounted(() => {
   to   { transform: translateX(-50%); }
 }
 
-/* ━━ RANGE SLIDER ━━ */
+/* RANGE SLIDER */
 .fs-range {
   -webkit-appearance: none;
   appearance: none;
@@ -826,7 +826,7 @@ onUnmounted(() => {
 </style>
 
 <style>
-/* Mapbox popup — strip default styles */
+/* Mapbox popup - strip default styles */
 .concovery-popup .mapboxgl-popup-content {
   background: transparent !important;
   padding: 0 !important;

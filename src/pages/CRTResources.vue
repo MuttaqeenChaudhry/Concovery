@@ -6,9 +6,9 @@ import BlurReveal from '@/components/ui/blur-reveal/BlurReveal.vue'
   <main class="flex-1">
     <div class="bg-white min-h-screen">
 
-      <!-- ══════════════════════════════════════════════════════════════════════
+      <!-- 
         HERO SECTION
-      ══════════════════════════════════════════════════════════════════════════ -->
+    -->
       <section class="res-hero text-white">
         <div class="res-hero-lines"></div>
         <div class="res-hero-edge"></div>
@@ -45,9 +45,9 @@ import BlurReveal from '@/components/ui/blur-reveal/BlurReveal.vue'
         </div>
       </section>
 
-      <!-- ══════════════════════════════════════════════════════════════════════
+      <!-- 
         CRT5 FEATURED CARD
-      ══════════════════════════════════════════════════════════════════════════ -->
+    -->
       <section class="py-20" style="background: linear-gradient(160deg, #EBF3FF 0%, #DEF0FF 50%, #EBF3FF 100%);">
         <div class="max-w-[1200px] mx-auto px-10">
 
@@ -90,7 +90,7 @@ import BlurReveal from '@/components/ui/blur-reveal/BlurReveal.vue'
                     <div>
                       <p class="text-white font-semibold mb-2 text-sm">Important</p>
                       <ul class="text-white/80 text-sm space-y-1.5">
-                        <li>CRT5 does NOT diagnose concussion — only trained medical professionals can</li>
+                        <li>CRT5 does NOT diagnose concussion - only trained medical professionals can</li>
                         <li>It helps you decide whether to seek medical assessment</li>
                         <li>If you suspect concussion, remove the player from activity immediately</li>
                         <li>When in doubt, sit them out</li>
@@ -136,7 +136,7 @@ import BlurReveal from '@/components/ui/blur-reveal/BlurReveal.vue'
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
 
-/* ━━ HERO ━━ */
+/* HERO */
 .res-hero {
   position: relative;
   background: #07090e;
@@ -177,7 +177,7 @@ import BlurReveal from '@/components/ui/blur-reveal/BlurReveal.vue'
   background: linear-gradient(to bottom, transparent, #38bfff 40%, #38bfff 60%, transparent);
 }
 
-/* ━━ EKG ━━ */
+/* EKG */
 .res-ekg {
   position: absolute; bottom: 0; left: 0; right: 0;
   z-index: 2; height: 56px; overflow: hidden; opacity: 0.18;

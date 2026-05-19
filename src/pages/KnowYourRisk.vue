@@ -22,10 +22,10 @@ const vClickOutside = {
   }
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//
 // BRAIN REGIONS
 // Source: QBI, Mayo Clinic, CDC
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//
 
 const brainRegions = {
   frontal:    { id: 'frontal',    name: 'Frontal Lobe',   controls: 'Decision making, planning and emotions',    symptoms: ['Trouble concentrating or making decisions', 'Feeling confused or foggy', 'Mood changes, feeling angry, sad or anxious more easily', 'Problems with planning or organising your day', 'Difficulty controlling impulses or emotions'] },
@@ -60,9 +60,9 @@ function getRegionTextFill(id) {
   return isActive ? '#ffffff' : '#1A1A1A'
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 
 // DROPDOWN AND FILTER STATE
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//
 
 const sportsDropdown    = ref([])
 const ageGroupDropdown  = ref([])
@@ -77,11 +77,11 @@ const loadingAge        = ref(false)
 const loadingTrend      = ref(false)
 const loadingComparison = ref(false)
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 
 // SPORT AND AGE RAW DATA
 // Sport data  = hospitalisations for a specific sport, split by sex.
 // Age data    = hospitalisations for a specific age group across ALL sports.
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//
 
 const sportMale   = ref(0)
 const sportFemale = ref(0)
@@ -101,7 +101,7 @@ const sportFemaleFillPct = computed(() => sportTotal.value ? (sportFemale.value 
 const ageMaleFillPct     = computed(() => ageTotal.value   ? (ageMale.value     / ageTotal.value)   * 100 : 0)
 const ageFemaleFillPct   = computed(() => ageTotal.value   ? (ageFemale.value   / ageTotal.value)   * 100 : 0)
 
-// Body fill animation — smooth ease-out cubic
+// Body fill animation - smooth ease-out cubic
 function animateTo(startVal, endVal, setter) {
   const duration  = 700
   const startTime = performance.now()
@@ -116,10 +116,10 @@ function animateTo(startVal, endVal, setter) {
   requestAnimationFrame(step)
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 
 // COUNT-UP ANIMATION
 // Used by Beat 1, Beat 2 detail card, and Beat 3
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//
 
 const displaySportMale      = ref(0)
 const displaySportFemale    = ref(0)
@@ -149,10 +149,10 @@ watch(sportFemaleFillPct, val => animateTo(animSportFemale.value, val, v => anim
 watch(ageMaleFillPct,     val => animateTo(animAgeMale.value,     val, v => animAgeMale.value     = v))
 watch(ageFemaleFillPct,   val => animateTo(animAgeFemale.value,   val, v => animAgeFemale.value   = v))
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 
 // SPORT ICON + COLOUR MAP
 // Shared helper functions used by Beat 1 and Beat 2 detail card
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 
 
 function getSportIconBg(name) {
   const n = (name || '').toLowerCase()
@@ -213,17 +213,17 @@ function getSportIconSvgPath(name) {
   return `<circle cx="12" cy="7" r="3" fill="none" stroke="white" stroke-width="2"/><path d="M5 20 Q5 14 12 14 Q19 14 19 20" fill="none" stroke="white" stroke-width="2"/>`
 }
 
-// Beat 1 — reads from sportsType
+// Beat 1 - reads from sportsType
 const sportIconBg  = computed(() => getSportIconBg(sportsType.value))
 const sportIconSvg = computed(() => getSportIconSvgPath(sportsType.value))
 
-// Beat 2 — reads from selectedComparisonSport
+// Beat 2 - reads from selectedComparisonSport
 const comparisonSportIconBg  = computed(() => getSportIconBg(selectedComparisonSport.value?.name))
 const comparisonSportIconSvg = computed(() => getSportIconSvgPath(selectedComparisonSport.value?.name))
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 
 // AGE GROUP ICON ROW
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 
 
 const heightMap = {
   '0-4':   20,
@@ -248,9 +248,9 @@ async function selectAgeGroup(label) {
   await fetchAgeData()
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 
 // SPORT COMPARISON DATA
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 
 
 const comparisonSports        = ref([])
 const selectedComparisonSport = ref(null)
@@ -275,9 +275,9 @@ watch(selectedComparisonSport, (next, prev) => {
   countUp(from, to, v => displayComparisonRate.value = v)
 })
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//
 // TREND CHART DATA
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 
 
 const trendLabels            = ref([])
 const trendMaleData          = ref([])
@@ -306,9 +306,9 @@ const lineOptions = {
   },
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 
 // API CALLS
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 
 
 const BASE = 'https://site--concovery-backend--gvxxw7q2vn57.code.run/postgres'
 
@@ -400,9 +400,9 @@ onMounted(async () => {
 <template>
   <div class="bg-white min-h-screen">
 
-    <!-- ══════════════════════════════════════════════════════════════════════
+    <!-- 
       HERO SECTION
-    ══════════════════════════════════════════════════════════════════════════ -->
+    -->
     <section class="kyr-hero text-white">
       <div class="kyr-hero-lines"></div>
       <div class="kyr-hero-edge"></div>
@@ -423,7 +423,7 @@ onMounted(async () => {
         </BlurReveal>
       </div>
 
-      <!-- EKG heartbeat line — full width, flush to hero bottom -->
+      <!-- EKG heartbeat line - full width, flush to hero bottom -->
       <div class="kyr-ekg">
         <svg class="kyr-ekg-svg" viewBox="0 0 1200 56" fill="none"
           xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
@@ -451,7 +451,7 @@ onMounted(async () => {
           <div class="kyr-stat-card">
             <span class="kyr-stat-big" style="color:#38bfff;">10 yrs</span>
             <span class="kyr-stat-title">Of real data</span>
-            <span class="kyr-stat-desc">Every chart on this page is built from a decade of Australian hospital records — not estimates, not surveys.</span>
+            <span class="kyr-stat-desc">Every chart on this page is built from a decade of Australian hospital records - not estimates, not surveys.</span>
           </div>
           <div class="kyr-stat-card">
             <span class="kyr-stat-big">21 days</span>
@@ -462,9 +462,9 @@ onMounted(async () => {
       </div>
     </section>
 
-    <!-- ══════════════════════════════════════════════════════════════════════
-      BEAT 1 — YOUR SPORT
-    ══════════════════════════════════════════════════════════════════════════ -->
+    <!-- 
+      BEAT 1 - YOUR SPORT
+    -->
     <section class="py-24" style="background:#EBF3FF;">
       <div class="max-w-[1200px] mx-auto px-10">
 
@@ -621,9 +621,9 @@ onMounted(async () => {
       </div>
     </section>
 
-    <!-- ══════════════════════════════════════════════════════════════════════
-      BEAT 2 — SPORT RISK LADDER
-    ══════════════════════════════════════════════════════════════════════════ -->
+    <!-- 
+      BEAT 2 - SPORT RISK LADDER
+   -->
     <section class="py-24" style="background: linear-gradient(160deg, #EBF3FF 0%, #DEF0FF 50%, #EBF3FF 100%);">
       <div class="max-w-[1200px] mx-auto px-10">
 
@@ -661,7 +661,7 @@ onMounted(async () => {
             </div>
           </div>
 
-          <!-- Detail card — interactive with icon, count-up and risk bar -->
+          <!-- Detail card - interactive with icon, count-up and risk bar -->
           <transition name="sport-name" mode="out-in">
             <div v-if="selectedComparisonSport" :key="selectedComparisonSport.name" class="bg-white rounded-2xl p-8 border border-[#EBEBEB] shadow-xl relative overflow-hidden">
               <div class="absolute top-0 right-0 w-40 h-40 rounded-full blur-3xl opacity-5 pointer-events-none transition-all duration-700" :style="{ background: comparisonSportIconBg, transform: 'translate(30%, -30%)' }"/>
@@ -712,9 +712,9 @@ onMounted(async () => {
       </div>
     </section>
 
-    <!-- ══════════════════════════════════════════════════════════════════════
-      BEAT 3 — WHO GETS HURT MOST
-    ══════════════════════════════════════════════════════════════════════════ -->
+    <!-- 
+      BEAT 3 - WHO GETS HURT MOST
+    -->
     <section class="py-24" style="background: linear-gradient(135deg, #F0F7FF 0%, #DEF0FF 40%, #EBF3FF 70%, #F5F9FF 100%);">
       <div class="max-w-[1200px] mx-auto px-10">
 
@@ -873,9 +873,9 @@ onMounted(async () => {
       </div>
     </section>
 
-    <!-- ══════════════════════════════════════════════════════════════════════
-      BEAT 4 — THIS IS WHY THE RULES EXIST
-    ══════════════════════════════════════════════════════════════════════════ -->
+    <!-- 
+      BEAT 4 - THIS IS WHY THE RULES EXIST
+     -->
     <section class="py-24" style="background: linear-gradient(180deg, #EBF3FF 0%, #D6EAFF 35%, #E8F2FF 65%, #F0F6FF 100%);">
       <div class="max-w-[1200px] mx-auto px-10">
 
@@ -936,9 +936,9 @@ onMounted(async () => {
       </div>
     </section>
 
-    <!-- ══════════════════════════════════════════════════════════════════════
-      BEAT 5 — BRAIN SCIENCE
-    ══════════════════════════════════════════════════════════════════════════ -->
+    <!-- 
+      BEAT 5 - BRAIN SCIENCE
+ -->
     <section class="py-24" style="background: linear-gradient(145deg, #F5F9FF 0%, #E8F2FF 30%, #D8ECFF 55%, #EBF3FF 100%);">
       <div class="max-w-[1200px] mx-auto px-10">
 
@@ -1031,9 +1031,9 @@ onMounted(async () => {
       </div>
     </section>
 
-    <!-- ══════════════════════════════════════════════════════════════════════
-      BEAT 6 — END WITH CONTROL
-    ══════════════════════════════════════════════════════════════════════════ -->
+    <!--
+      BEAT 6 - END WITH CONTROL
+   -->
     <section style="background:#0A1628;" class="py-24">
       <div class="max-w-[1200px] mx-auto px-10">
         <div class="text-center mb-14">
@@ -1076,7 +1076,7 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-/* ━━ TRANSITIONS ━━ */
+/* TRANSITIONS */
 .fade-up-enter-active { transition: opacity 0.4s ease, transform 0.4s ease; }
 .fade-up-leave-active { transition: opacity 0.2s ease; }
 .fade-up-enter-from   { opacity: 0; transform: translateY(14px); }
@@ -1098,7 +1098,7 @@ onMounted(async () => {
 
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
 
-/* ━━ HERO ━━ */
+/* HERO */
 .kyr-hero {
   position: relative;
   background: #07090e;
@@ -1139,7 +1139,7 @@ onMounted(async () => {
   background: linear-gradient(to bottom, transparent, #38bfff 40%, #38bfff 60%, transparent);
 }
 
-/* ━━ STATS SECTION ━━ */
+/* STATS SECTION */
 .kyr-stats-section { background: #e8f3ff; padding: 40px 0; }
 .kyr-stats-grid {
   display: grid;
@@ -1154,7 +1154,7 @@ onMounted(async () => {
 .kyr-stat-title { font-size: 15px; font-weight: 700; color: #1A1A1A; }
 .kyr-stat-desc  { font-size: 13px; color: #5A7A9B; line-height: 1.6; max-width: 260px; }
 
-/* ━━ EKG LINE ━━ */
+/*  EKG LINE */
 .kyr-ekg { position: absolute; bottom: 0; left: 0; right: 0; z-index: 2; height: 56px; overflow: hidden; opacity: 0.18; }
 .kyr-ekg-svg { width: 200%; height: 100%; animation: kyrEkgScroll 3s linear infinite; }
 @keyframes kyrEkgScroll {
