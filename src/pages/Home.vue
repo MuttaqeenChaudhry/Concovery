@@ -105,7 +105,7 @@ const barsVisible = ref(false)
               </button>
             </router-link>
             <router-link to="/locatesupport">
-              <button class="btn-primary">I recently had a knock →</button>
+              <button class="btn-primary">Find Support →</button>
             </router-link>
           </div>
         </div>

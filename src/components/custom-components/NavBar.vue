@@ -39,9 +39,9 @@ const isMenuOpen = ref(false)
 
           <router-link
             to="/locatesupport"
-            class="transition-colors hover:text-[#007aff] font-semibold border border-[#007aff] rounded-full px-4 py-1.5"
-            :class="router.currentRoute.value.path === '/locatesupport' ? 'bg-[#007aff] text-white' : 'text-[#007aff]'"
-          >I had a knock</router-link>
+            class="transition-colors hover:text-[#007aff] font-semibold rounded-full px-4 py-1.5"
+            :class="router.currentRoute.value.path === '/locatesupport' ? 'text-[#007aff]' : 'text-black'"
+          >Find Support</router-link>
 
           <router-link
             to="/crtresources"
@@ -50,8 +50,9 @@ const isMenuOpen = ref(false)
           >Resources</router-link>
 
            <!-- Mobile hamburger -->
+        </div>
         <button
-          class="md:hidden text-[#1d1d1f] p-2"
+          class="md:hidden text-[#1d1d1f] p-2 cursor-pointer relative"
           aria-label="Toggle menu"
           @click="isMenuOpen = !isMenuOpen"
         >
@@ -64,34 +65,32 @@ const isMenuOpen = ref(false)
             <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
           </svg>
         </button>
-      </div>
+    </div>
+     <!-- Mobile menu -->
+    <div v-if="isMenuOpen" class="flex flex-col md:hidden py-4 px-4 space-y-2 border-t border-[#d2d2d7]/50 fadeIn bg-white">
+      <router-link @click="isMenuOpen = false" to="/"
+        class="block py-2 transition-colors hover:text-[#007aff] font-semibold"
+        :class="router.currentRoute.value.path === '/' ? 'text-[#007aff]' : 'text-black'"
+      >Home</router-link>
+      <router-link @click="isMenuOpen = false" to="/iteration3/stagedrecovery"
+        class="block py-2 transition-colors hover:text-[#007aff] font-semibold"
+        :class="router.currentRoute.value.path === '/iteration3/stagedrecovery' ? 'text-[#007aff]' : 'text-black'"
+      >My Recovery</router-link>
 
-      <!-- Mobile menu -->
-      <div v-if="isMenuOpen" class="md:hidden py-4 px-4 space-y-2 border-t border-[#d2d2d7]/50 fadeInAnim">
-        <router-link @click="isMenuOpen = false" to="/"
-          class="block py-2 transition-colors hover:text-[#007aff] font-semibold"
-          :class="router.currentRoute.value.path === '/' ? 'text-[#007aff]' : 'text-black'"
-        >Home</router-link>
-         <router-link @click="isMenuOpen = false" to="/iteration3/stagedrecovery"
-          class="block py-2 transition-colors hover:text-[#007aff] font-semibold"
-          :class="router.currentRoute.value.path === '/iteration3/stagedrecovery' ? 'text-[#007aff]' : 'text-black'"
-        >My Recovery</router-link>
+      <router-link @click="isMenuOpen = false" to="/exploredata"
+        class="block py-2 transition-colors hover:text-[#007aff] font-semibold"
+        :class="router.currentRoute.value.path === '/exploredata' ? 'text-[#007aff]' : 'text-black'"
+      >Know Your Risk</router-link>
 
-        <router-link @click="isMenuOpen = false" to="/exploredata"
-          class="block py-2 transition-colors hover:text-[#007aff] font-semibold"
-          :class="router.currentRoute.value.path === '/exploredata' ? 'text-[#007aff]' : 'text-black'"
-        >Know Your Risk</router-link>
+      <router-link @click="isMenuOpen = false" to="/locatesupport"
+        class="block py-2 transition-colors hover:text-[#007aff] font-semibold"
+        :class="router.currentRoute.value.path === '/locatesupport' ? 'text-[#007aff]' : 'text-black'"
+      >Find Support</router-link>
 
-        <router-link @click="isMenuOpen = false" to="/locatesupport"
-          class="block py-2 transition-colors hover:text-[#007aff] font-semibold"
-          :class="router.currentRoute.value.path === '/locatesupport' ? 'text-[#007aff]' : 'text-black'"
-        >I had a knock</router-link>
-
-        <router-link @click="isMenuOpen = false" to="/crtresources"
-          class="block py-2 transition-colors hover:text-[#007aff] font-semibold"
-          :class="router.currentRoute.value.path === '/crtresources' ? 'text-[#007aff]' : 'text-black'"
-        >Resources</router-link>
-      </div>
+      <router-link @click="isMenuOpen = false" to="/crtresources"
+        class="block py-2 transition-colors hover:text-[#007aff] font-semibold"
+        :class="router.currentRoute.value.path === '/crtresources' ? 'text-[#007aff]' : 'text-black'"
+      >Resources</router-link>
     </div>
     </div>
   </nav>
@@ -100,8 +99,7 @@ const isMenuOpen = ref(false)
 
 <style scoped>
 .fadeIn {
-
-    animation: fadeInDown 0.25s ease;
+    animation: fadeInDown 0.25s ease-in;
 
 }
 
