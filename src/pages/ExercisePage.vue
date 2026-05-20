@@ -89,7 +89,7 @@ function saveExerciseCompletion() {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// INSTRUCTIONAL CAMERA CUE
+// CAMERA CUE
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 function getInstructionalCue(exerciseIdx: number, phase: string, timerPct: number): string {
@@ -130,7 +130,6 @@ function startRep(idx: number) {
       if (allSetsDone) {
         state.phase = 'complete'
         positionFeedback.value[idx] = 'Exercise complete'
-        // When all 3 exercises done save completion
         if (allExercisesDone.value) saveExerciseCompletion()
       } else if (setDone) {
         state.phase      = 'resting'
@@ -209,12 +208,10 @@ function getRepRingColor(idx: number): string {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// RETURN TO RECOVERY PAGE
-// When all done: save a flag so StagedRecovery2 knows to reopen modal at step 4
+// NAVIGATION
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 function finishAndReturn() {
-  // Save flag so the recovery page re-opens the modal at the journal step
   localStorage.setItem('concovery_return_modal', 'true')
   stopAllCameras()
   router.push('/iteration3/stagedrecovery')
@@ -226,12 +223,7 @@ function skipAndReturn() {
   router.push('/iteration3/stagedrecovery')
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// LIFECYCLE
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 onMounted(() => { loadExerciseHistory() })
-
 onUnmounted(() => {
   stopAllCameras()
   exerciseIntervals.forEach(i => { if (i) clearInterval(i) })
@@ -253,11 +245,8 @@ onUnmounted(() => {
             <h1 class="text-white text-2xl font-black">Neck Exercises</h1>
           </div>
         </div>
-        <button @click="skipAndReturn" class="text-white/50 text-base hover:text-white transition-colors font-semibold">
-          Skip for now
-        </button>
+        <button @click="skipAndReturn" class="text-white/50 text-base hover:text-white transition-colors font-semibold">Skip for now</button>
       </div>
-      <!-- Progress bar -->
       <div class="h-1.5 bg-white/10">
         <div class="h-full bg-[#1A4FAB] transition-all duration-500" style="width: 75%" />
       </div>
@@ -271,12 +260,7 @@ onUnmounted(() => {
           <p class="text-base text-[#5A7A9B]">Complete all 3 exercises daily to maintain your streak</p>
         </div>
         <div class="flex gap-2">
-          <div
-            v-for="(done, i) in weeklyCompletion" :key="i"
-            class="w-8 h-8 rounded-lg transition-colors"
-            :class="done ? 'bg-[#1B7C3D]' : 'bg-[#EBEBEB]'"
-            :title="done ? 'Completed' : 'Not completed'"
-          />
+          <div v-for="(done, i) in weeklyCompletion" :key="i" class="w-8 h-8 rounded-lg transition-colors" :class="done ? 'bg-[#1B7C3D]' : 'bg-[#EBEBEB]'" :title="done ? 'Completed' : 'Not completed'"/>
         </div>
       </div>
     </div>
@@ -287,10 +271,7 @@ onUnmounted(() => {
         <svg class="mx-auto mb-3" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#1B7C3D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
         <p class="text-2xl font-bold text-[#1A1A1A] mb-2">All 3 exercises complete!</p>
         <p class="text-[#5A7A9B] text-lg mb-6">Great work. Return to finish your daily check-in.</p>
-        <button
-          @click="finishAndReturn"
-          class="bg-[#1B7C3D] text-white px-12 py-5 rounded-full font-bold text-lg hover:bg-[#166a33] transition-colors flex items-center gap-3 mx-auto"
-        >
+        <button @click="finishAndReturn" class="bg-[#1B7C3D] text-white px-12 py-5 rounded-full font-bold text-lg hover:bg-[#166a33] transition-colors flex items-center gap-3 mx-auto">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
           Back to check-in — continue to journal
         </button>
@@ -305,6 +286,7 @@ onUnmounted(() => {
           class="bg-white rounded-3xl border-2 shadow-sm transition-all duration-300"
           :class="exerciseState[idx].phase === 'complete' ? 'border-[#1B7C3D]' : 'border-[#EBEBEB]'"
         >
+
           <!-- Card header -->
           <div class="p-8 border-b border-[#EBEBEB]">
             <div class="flex items-start justify-between mb-4">
@@ -320,41 +302,286 @@ onUnmounted(() => {
             <p class="text-base text-[#1A1A1A] leading-relaxed">{{ def.instructions }}</p>
           </div>
 
-          <!-- Diagram -->
-          <div class="px-8 pt-6 pb-4">
-            <p class="text-sm font-semibold text-[#5A7A9B] uppercase tracking-wider mb-4">Correct position</p>
+          <!-- ── ANIMATION ────────────────────────────────────────────────── -->
+          <div class="px-8 pt-6 pb-3">
+            <div class="flex items-center justify-between mb-3">
+              <p class="text-sm font-semibold text-[#5A7A9B] uppercase tracking-wider">Watch &amp; follow</p>
+              <span class="text-xs bg-[#1A4FAB]/10 text-[#1A4FAB] px-2.5 py-1 rounded-full font-semibold">Loops automatically</span>
+            </div>
 
-            <svg v-if="def.diagram === 'chin-tuck'" viewBox="0 0 200 120" class="w-full h-28" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <ellipse cx="80" cy="45" rx="28" ry="32" stroke="#1A1A1A" stroke-width="2" fill="#F7F9FC"/>
-              <rect x="65" y="74" width="22" height="30" rx="4" fill="#F7F9FC" stroke="#1A1A1A" stroke-width="2"/>
-              <circle cx="68" cy="40" r="3" fill="#1A1A1A"/>
-              <path d="M 90 68 L 130 68" stroke="#1A4FAB" stroke-width="2.5" stroke-dasharray="4 2"/>
-              <path d="M 90 68 L 98 63 M 90 68 L 98 73" stroke="#1A4FAB" stroke-width="2.5" stroke-linecap="round"/>
-              <text x="132" y="72" font-size="11" fill="#1A4FAB" font-family="sans-serif">Pull back</text>
-              <text x="48" y="115" font-size="10" fill="#1B7C3D" font-family="sans-serif" font-weight="600">Not down — straight back</text>
-            </svg>
+            <!-- ═══════════════════════════════════════════════════════════
+              CHIN TUCK
+              Dark background, same visual language as the homepage football
+              animation. Geometric person in side profile. The head+neck
+              group slides backward. A ghost outline shows where neutral is.
+              An ice-blue rail shows the chin must stay at the same height.
+              The orange dot is the chin reference point to watch.
+            ═══════════════════════════════════════════════════════════════ -->
+            <div v-if="def.diagram === 'chin-tuck'" class="rounded-2xl overflow-hidden" style="background:#07090e; height:200px;">
+              <svg viewBox="0 0 300 200" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
 
-            <svg v-else-if="def.diagram === 'neck-rotation'" viewBox="0 0 200 120" class="w-full h-28" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <ellipse cx="100" cy="55" rx="35" ry="40" stroke="#1A1A1A" stroke-width="2" fill="#F7F9FC"/>
-              <path d="M100 25 L100 35" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round"/>
-              <path d="M65 55 Q50 30 75 20" stroke="#1A4FAB" stroke-width="2.5" stroke-dasharray="4 2"/>
-              <path d="M 75 20 L 68 28 M 75 20 L 83 22" stroke="#1A4FAB" stroke-width="2" stroke-linecap="round"/>
-              <path d="M135 55 Q150 30 125 20" stroke="#1A4FAB" stroke-width="2.5" stroke-dasharray="4 2"/>
-              <path d="M 125 20 L 132 28 M 125 20 L 117 22" stroke="#1A4FAB" stroke-width="2" stroke-linecap="round"/>
-              <text x="45" y="110" font-size="10" fill="#1B7C3D" font-family="sans-serif" font-weight="600">Slow! stop before pain</text>
-            </svg>
+                <!-- Subtle background diagonal lines — same as hero section -->
+                <rect width="300" height="200" fill="#07090e"/>
+                <line x1="0" y1="50"  x2="100" y2="0"   stroke="rgba(56,191,255,0.04)" stroke-width="1"/>
+                <line x1="0" y1="100" x2="200" y2="0"   stroke="rgba(56,191,255,0.04)" stroke-width="1"/>
+                <line x1="0" y1="150" x2="300" y2="0"   stroke="rgba(56,191,255,0.04)" stroke-width="1"/>
+                <line x1="0" y1="200" x2="300" y2="50"  stroke="rgba(56,191,255,0.04)" stroke-width="1"/>
+                <line x1="50" y1="200" x2="300" y2="100" stroke="rgba(56,191,255,0.04)" stroke-width="1"/>
 
-            <svg v-else-if="def.diagram === 'isometric'" viewBox="0 0 200 120" class="w-full h-28" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <ellipse cx="100" cy="45" rx="30" ry="35" stroke="#1A1A1A" stroke-width="2" fill="#F7F9FC"/>
-              <circle cx="88" cy="40" r="3" fill="#1A1A1A"/>
-              <circle cx="112" cy="40" r="3" fill="#1A1A1A"/>
-              <rect x="88" y="77" width="24" height="25" rx="4" fill="#F7F9FC" stroke="#1A1A1A" stroke-width="2"/>
-              <rect x="55" y="20" width="32" height="18" rx="6" fill="#E65100" fill-opacity="0.15" stroke="#E65100" stroke-width="2"/>
-              <text x="58" y="32" font-size="9" fill="#E65100" font-family="sans-serif" font-weight="600">Palm</text>
-              <path d="M 87 29 L 73 29" stroke="#E65100" stroke-width="2.5"/>
-              <path d="M 87 29 L 80 24 M 87 29 L 80 34" stroke="#E65100" stroke-width="2" stroke-linecap="round"/>
-              <text x="42" y="110" font-size="10" fill="#1B7C3D" font-family="sans-serif" font-weight="600">Head must not move at all</text>
-            </svg>
+                <!-- Phase labels -->
+                <g class="ct-phase-neutral">
+                  <rect x="195" y="10" width="90" height="20" rx="10" fill="rgba(230,81,0,0.18)"/>
+                  <text x="240" y="24" text-anchor="middle" font-size="10" fill="#E65100" font-family="sans-serif" font-weight="700" letter-spacing="0.5">NEUTRAL</text>
+                </g>
+                <g class="ct-phase-tucked">
+                  <rect x="195" y="10" width="90" height="20" rx="10" fill="rgba(56,191,255,0.18)"/>
+                  <text x="240" y="24" text-anchor="middle" font-size="10" fill="#38bfff" font-family="sans-serif" font-weight="700" letter-spacing="0.5">TUCKED ✓</text>
+                </g>
+
+                <!-- Horizontal chin-level guide rail -->
+                <line x1="20" y1="112" x2="285" y2="112" stroke="#38bfff" stroke-width="1" stroke-dasharray="6 4" opacity="0.35"/>
+                <!-- Back direction label -->
+                <text x="218" y="104" font-size="9.5" fill="#38bfff" font-family="sans-serif" font-weight="700" opacity="0.8">← BACK</text>
+
+                <!-- Ghost outline showing neutral start position (fixed) -->
+                <circle cx="162" cy="76" r="44" stroke="#38bfff" stroke-width="1.2" stroke-dasharray="4 3" fill="rgba(56,191,255,0.04)" opacity="0.5"/>
+
+                <!-- Static body: shoulders -->
+                <path d="M 32 192 C 52 164 90 156 150 154 L 180 154 C 240 156 278 164 298 192 Z"
+                  fill="#1A4FAB" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+                <!-- Shirt collar line -->
+                <path d="M 138 154 Q 150 166 162 154" stroke="rgba(255,255,255,0.2)" stroke-width="1.2" fill="none"/>
+
+                <!-- ── ANIMATED GROUP: neck + head slide backward ── -->
+                <g class="ct-head">
+
+                  <!-- Neck -->
+                  <rect x="140" y="118" width="32" height="38" rx="10" fill="#FFCC88" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+
+                  <!-- Head circle (the main element) -->
+                  <circle cx="162" cy="76" r="44" fill="#FFCC88" stroke="rgba(255,255,255,0.25)" stroke-width="2.5"/>
+
+                  <!-- Hair — thick stroke covers top/back of skull -->
+                  <path d="M 120 80 C 118 52 134 32 162 30 C 186 30 200 46 202 64"
+                    stroke="#3D2B1A" stroke-width="14" fill="none" stroke-linecap="round"/>
+
+                  <!-- Ear (left side, visible from right-facing profile) -->
+                  <circle cx="120" cy="80" r="11" fill="#F4C88A" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+                  <circle cx="122" cy="80" r="5" fill="rgba(0,0,0,0.12)"/>
+
+                  <!-- Eyebrow -->
+                  <path d="M 172 60 Q 182 55 192 59" stroke="#3D2B1A" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+
+                  <!-- Eye -->
+                  <circle cx="182" cy="68" r="8" fill="white"/>
+                  <circle cx="182" cy="68" r="5" fill="#1A1A1A"/>
+                  <circle cx="184" cy="66" r="2" fill="white"/>
+
+                  <!-- Nose bump (protrudes right) -->
+                  <ellipse cx="200" cy="80" rx="5" ry="8" fill="#F4C88A" stroke="rgba(0,0,0,0.1)" stroke-width="1"/>
+
+                  <!-- Mouth -->
+                  <path d="M 192 98 Q 200 105 208 98" stroke="#C9956A" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+
+                  <!-- Chin reference dot — tracks along the guide rail -->
+                  <circle cx="208" cy="112" r="7" fill="#E65100" stroke="white" stroke-width="2"/>
+                  <circle cx="208" cy="112" r="3" fill="white" opacity="0.5"/>
+
+                </g>
+
+                <!-- Bottom label -->
+                <text x="150" y="197" text-anchor="middle" font-size="9.5" fill="rgba(56,191,255,0.7)" font-family="sans-serif" font-weight="600">Not down — pull chin straight back</text>
+
+              </svg>
+            </div>
+
+            <!-- ═══════════════════════════════════════════════════════════
+              NECK ROTATION
+              Front-facing person on dark background. The head circle and
+              hair stay fixed (the skull doesn't deform). Only the face
+              FEATURES (both eyes, nose-direction line, mouth) rotate as a
+              group around the head centre (150, 80). The orange nose line
+              acts like a compass needle — it's the single clearest indicator
+              of where the face is pointing. 5.5s cycle: left → centre → right.
+            ═══════════════════════════════════════════════════════════════ -->
+            <div v-else-if="def.diagram === 'neck-rotation'" class="rounded-2xl overflow-hidden" style="background:#07090e; height:200px;">
+              <svg viewBox="0 0 300 200" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+                <rect width="300" height="200" fill="#07090e"/>
+                <!-- Background lines -->
+                <line x1="0" y1="50"  x2="100" y2="0"   stroke="rgba(56,191,255,0.04)" stroke-width="1"/>
+                <line x1="0" y1="100" x2="200" y2="0"   stroke="rgba(56,191,255,0.04)" stroke-width="1"/>
+                <line x1="0" y1="150" x2="300" y2="0"   stroke="rgba(56,191,255,0.04)" stroke-width="1"/>
+                <line x1="0" y1="200" x2="300" y2="50"  stroke="rgba(56,191,255,0.04)" stroke-width="1"/>
+                <line x1="50" y1="200" x2="300" y2="100" stroke="rgba(56,191,255,0.04)" stroke-width="1"/>
+
+                <!-- Range-of-motion arc guide -->
+                <path d="M 60 162 A 100 100 0 0 1 240 162" stroke="#38bfff" stroke-width="1" stroke-dasharray="5 4" opacity="0.22" fill="none"/>
+
+                <!-- Phase labels -->
+                <g class="nr-phase-centre">
+                  <rect x="105" y="10" width="90" height="20" rx="10" fill="rgba(56,191,255,0.15)"/>
+                  <text x="150" y="24" text-anchor="middle" font-size="10" fill="#38bfff" font-family="sans-serif" font-weight="700">CENTRE</text>
+                </g>
+                <g class="nr-phase-left">
+                  <rect x="87" y="10" width="126" height="20" rx="10" fill="rgba(230,81,0,0.15)"/>
+                  <text x="150" y="24" text-anchor="middle" font-size="10" fill="#E65100" font-family="sans-serif" font-weight="700">LOOKING LEFT</text>
+                </g>
+                <g class="nr-phase-right">
+                  <rect x="87" y="10" width="126" height="20" rx="10" fill="rgba(230,81,0,0.15)"/>
+                  <text x="150" y="24" text-anchor="middle" font-size="10" fill="#E65100" font-family="sans-serif" font-weight="700">LOOKING RIGHT</text>
+                </g>
+
+                <!-- Direction labels -->
+                <text class="nr-lbl-l" x="12" y="96" font-size="11" fill="white" font-family="sans-serif" font-weight="700">← LEFT</text>
+                <text class="nr-lbl-r" x="232" y="96" font-size="11" fill="white" font-family="sans-serif" font-weight="700">RIGHT →</text>
+
+                <!-- Static body: shoulders + neck base -->
+                <path d="M 44 192 C 66 164 106 156 150 154 C 194 156 234 164 256 192 Z"
+                  fill="#1A4FAB" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+                <path d="M 135 154 Q 150 167 165 154" stroke="rgba(255,255,255,0.18)" stroke-width="1.2" fill="none"/>
+                <!-- Neck -->
+                <rect x="134" y="132" width="32" height="24" rx="10" fill="#FFCC88" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+
+                <!-- Static elements: head circle, hair cap, ears -->
+                <!-- Head circle -->
+                <circle cx="150" cy="80" r="52" fill="#FFCC88" stroke="rgba(255,255,255,0.25)" stroke-width="2.5"/>
+                <!-- Hair cap (filled area at top/back of skull) -->
+                <path d="M 100 78 C 102 36 122 24 150 22 C 178 24 198 36 200 78 L 196 86 C 190 44 172 30 150 30 C 128 30 110 44 104 86 Z" fill="#3D2B1A"/>
+                <!-- Left ear -->
+                <circle cx="98" cy="82" r="11" fill="#F4C88A" stroke="rgba(255,255,255,0.18)" stroke-width="1.5"/>
+                <circle cx="100" cy="82" r="5" fill="rgba(0,0,0,0.12)"/>
+                <!-- Right ear -->
+                <circle cx="202" cy="82" r="11" fill="#F4C88A" stroke="rgba(255,255,255,0.18)" stroke-width="1.5"/>
+                <circle cx="200" cy="82" r="5" fill="rgba(0,0,0,0.12)"/>
+
+                <!-- ── ANIMATED: face features rotate around head centre (150,80) ── -->
+                <!-- Only the eyes, nose-line, and mouth rotate.
+                     The skull, hair, ears stay perfectly still.
+                     transform-origin is set to the absolute SVG coordinate
+                     of the head centre so the rotation is perfectly centred. -->
+                <g class="nr-face">
+                  <!-- Left eyebrow -->
+                  <path d="M 126 66 Q 136 60 144 65" stroke="#3D2B1A" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                  <!-- Right eyebrow -->
+                  <path d="M 156 65 Q 164 60 174 66" stroke="#3D2B1A" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                  <!-- Left eye -->
+                  <circle cx="135" cy="76" r="8" fill="white"/>
+                  <circle cx="135" cy="76" r="5.5" fill="#1A1A1A"/>
+                  <circle cx="137" cy="74" r="2.2" fill="white"/>
+                  <!-- Right eye -->
+                  <circle cx="165" cy="76" r="8" fill="white"/>
+                  <circle cx="165" cy="76" r="5.5" fill="#1A1A1A"/>
+                  <circle cx="167" cy="74" r="2.2" fill="white"/>
+                  <!-- Nose direction line — the compass needle showing where face points -->
+                  <line x1="150" y1="86" x2="150" y2="124" stroke="#E65100" stroke-width="5" stroke-linecap="round"/>
+                  <circle cx="150" cy="128" r="6.5" fill="#E65100" stroke="white" stroke-width="2"/>
+                  <!-- Mouth -->
+                  <path d="M 136 106 Q 150 116 164 106" stroke="#C9956A" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+                </g>
+
+                <!-- Bottom label -->
+                <text x="150" y="197" text-anchor="middle" font-size="9.5" fill="rgba(56,191,255,0.7)" font-family="sans-serif" font-weight="600">Slow — stop before any pain</text>
+
+              </svg>
+            </div>
+
+            <!-- ═══════════════════════════════════════════════════════════
+              NECK ISOMETRICS
+              Dark background. Person in side profile (facing left). Head is
+              completely static. A stylised palm presses in from the right
+              with a pushing motion. Orange force arrows show the push direction.
+              Blue resistance arrows show the neck pushing back (equal force).
+              The ice-blue HOLD STILL badge pulses to reinforce zero movement.
+              2.6s press cycle — feels urgent and active.
+            ═══════════════════════════════════════════════════════════════ -->
+            <div v-else-if="def.diagram === 'isometric'" class="rounded-2xl overflow-hidden" style="background:#07090e; height:200px;">
+              <svg viewBox="0 0 300 200" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+                <rect width="300" height="200" fill="#07090e"/>
+                <!-- Background lines -->
+                <line x1="0" y1="50"  x2="100" y2="0"   stroke="rgba(56,191,255,0.04)" stroke-width="1"/>
+                <line x1="0" y1="100" x2="200" y2="0"   stroke="rgba(56,191,255,0.04)" stroke-width="1"/>
+                <line x1="0" y1="150" x2="300" y2="0"   stroke="rgba(56,191,255,0.04)" stroke-width="1"/>
+                <line x1="0" y1="200" x2="300" y2="50"  stroke="rgba(56,191,255,0.04)" stroke-width="1"/>
+                <line x1="50" y1="200" x2="300" y2="100" stroke="rgba(56,191,255,0.04)" stroke-width="1"/>
+
+                <!-- Static body: shoulders (green shirt, different from chin tuck) -->
+                <path d="M 30 192 C 50 164 88 156 136 154 L 166 154 C 214 156 252 164 272 192 Z"
+                  fill="#1B7C3D" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+                <path d="M 122 154 Q 136 167 150 154" stroke="rgba(255,255,255,0.18)" stroke-width="1.2" fill="none"/>
+
+                <!-- Static neck -->
+                <rect x="122" y="122" width="32" height="34" rx="10" fill="#FFCC88" stroke="rgba(255,255,255,0.18)" stroke-width="1.5"/>
+
+                <!-- Static head (facing LEFT — completely still, no animation) -->
+                <circle cx="138" cy="76" r="46" fill="#FFCC88" stroke="rgba(255,255,255,0.25)" stroke-width="2.5"/>
+                <!-- Hair (on right/back of head since facing left) -->
+                <path d="M 178 80 C 180 52 166 32 138 30 C 114 30 98 48 98 66"
+                  stroke="#3D2B1A" stroke-width="14" fill="none" stroke-linecap="round"/>
+                <!-- Right ear (skull side, visible when facing left) -->
+                <circle cx="182" cy="80" r="11" fill="#F4C88A" stroke="rgba(255,255,255,0.18)" stroke-width="1.5"/>
+                <circle cx="180" cy="80" r="5" fill="rgba(0,0,0,0.12)"/>
+                <!-- Eyebrow (face/left side) -->
+                <path d="M 108 62 Q 118 57 128 61" stroke="#3D2B1A" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                <!-- Eye -->
+                <circle cx="118" cy="70" r="8" fill="white"/>
+                <circle cx="118" cy="70" r="5.5" fill="#1A1A1A"/>
+                <circle cx="120" cy="68" r="2.2" fill="white"/>
+                <!-- Nose (protrudes left) -->
+                <ellipse cx="97" cy="80" rx="5.5" ry="8.5" fill="#F4C88A" stroke="rgba(0,0,0,0.1)" stroke-width="1"/>
+                <!-- Mouth -->
+                <path d="M 96 100 Q 108 108 120 100" stroke="#C9956A" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+
+                <!-- HOLD STILL badge (ice blue, pulses) -->
+                <g class="iso-hold">
+                  <rect x="118" y="30" width="82" height="22" rx="11" fill="rgba(56,191,255,0.14)" stroke="rgba(56,191,255,0.35)" stroke-width="1"/>
+                  <text x="159" y="45" text-anchor="middle" font-size="10" fill="#38bfff" font-family="sans-serif" font-weight="700" letter-spacing="0.3">HOLD STILL</text>
+                </g>
+
+                <!-- Blue resistance arrows: neck/head pushes BACK against the hand (pointing right) -->
+                <g opacity="0.7">
+                  <line x1="118" y1="68" x2="136" y2="68" stroke="#38bfff" stroke-width="2.5" stroke-linecap="round"/>
+                  <line x1="118" y1="78" x2="136" y2="78" stroke="#38bfff" stroke-width="2.5" stroke-linecap="round"/>
+                  <line x1="118" y1="88" x2="136" y2="88" stroke="#38bfff" stroke-width="2.5" stroke-linecap="round"/>
+                  <path d="M 132 65 L 136 68 L 132 71" stroke="#38bfff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                  <path d="M 132 75 L 136 78 L 132 81" stroke="#38bfff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                  <path d="M 132 85 L 136 88 L 132 91" stroke="#38bfff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                </g>
+
+                <!-- Orange force arrows: hand pushes LEFT toward forehead (pulse with palm) -->
+                <g class="iso-force">
+                  <line x1="166" y1="68" x2="148" y2="68" stroke="#E65100" stroke-width="3" stroke-linecap="round"/>
+                  <line x1="166" y1="78" x2="148" y2="78" stroke="#E65100" stroke-width="3" stroke-linecap="round"/>
+                  <line x1="166" y1="88" x2="148" y2="88" stroke="#E65100" stroke-width="3" stroke-linecap="round"/>
+                  <path d="M 152 65 L 148 68 L 152 71" stroke="#E65100" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                  <path d="M 152 75 L 148 78 L 152 81" stroke="#E65100" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                  <path d="M 152 85 L 148 88 L 152 91" stroke="#E65100" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                </g>
+
+                <!-- Animated palm presses from the right -->
+                <g class="iso-palm">
+                  <!-- Wrist/forearm -->
+                  <rect x="240" y="62" width="36" height="36" rx="8" fill="#FFCC88" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+                  <!-- Palm body -->
+                  <rect x="174" y="56" width="68" height="48" rx="14" fill="#FFCC88" stroke="rgba(255,255,255,0.3)" stroke-width="2.5"/>
+                  <!-- Knuckle line -->
+                  <path d="M 178 80 Q 208 76 240 80" stroke="rgba(0,0,0,0.12)" stroke-width="1.5" fill="none"/>
+                  <!-- Finger tips at left/pressing edge -->
+                  <rect x="163" y="60" width="14" height="11" rx="6" fill="#FFCC88" stroke="rgba(255,255,255,0.25)" stroke-width="1.8"/>
+                  <rect x="163" y="73" width="14" height="11" rx="6" fill="#FFCC88" stroke="rgba(255,255,255,0.25)" stroke-width="1.8"/>
+                  <rect x="163" y="86" width="14" height="11" rx="6" fill="#FFCC88" stroke="rgba(255,255,255,0.25)" stroke-width="1.8"/>
+                  <!-- Thumb -->
+                  <rect x="186" y="103" width="30" height="14" rx="7" fill="#FFCC88" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+                  <!-- PUSH label -->
+                  <text x="208" y="83" text-anchor="middle" font-size="10" fill="#E65100" font-family="sans-serif" font-weight="700">PUSH</text>
+                </g>
+
+                <!-- Bottom label -->
+                <text x="150" y="197" text-anchor="middle" font-size="9.5" fill="rgba(56,191,255,0.7)" font-family="sans-serif" font-weight="600">Head must not move at all</text>
+
+              </svg>
+            </div>
           </div>
 
           <!-- Cue tip -->
@@ -365,7 +592,7 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <!-- Camera feed — large -->
+          <!-- Camera feed -->
           <div class="px-8">
             <div class="bg-[#0A1628] rounded-2xl overflow-hidden relative" style="aspect-ratio:4/3;">
               <video
@@ -381,13 +608,6 @@ onUnmounted(() => {
               <div v-if="cameraActive[idx] && positionFeedback[idx]" class="absolute bottom-0 left-0 right-0 bg-black/70 px-4 py-3 text-center">
                 <p class="text-white text-base font-semibold">{{ positionFeedback[idx] }}</p>
               </div>
-              <div v-if="cameraActive[idx]" class="absolute inset-0 pointer-events-none flex items-center justify-center">
-                <svg viewBox="0 0 120 160" class="w-28 opacity-25" fill="none">
-                  <ellipse cx="60" cy="45" rx="30" ry="36" stroke="#1A4FAB" stroke-width="2" stroke-dasharray="4 2"/>
-                  <line x1="60" y1="81" x2="60" y2="130" stroke="#1A4FAB" stroke-width="2" stroke-dasharray="4 2"/>
-                  <line x1="30" y1="100" x2="90" y2="100" stroke="#1A4FAB" stroke-width="2" stroke-dasharray="4 2"/>
-                </svg>
-              </div>
             </div>
             <p class="text-sm text-[#5A7A9B] text-center mt-2 mb-5">Live feed only. Nothing recorded or stored</p>
           </div>
@@ -396,29 +616,19 @@ onUnmounted(() => {
           <div class="px-8 pb-5">
             <div class="flex items-center justify-between mb-5">
               <div class="flex gap-2">
-                <div
-                  v-for="s in def.sets" :key="s"
-                  class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all"
-                  :class="s < exerciseState[idx].currentSet ? 'bg-[#1B7C3D] text-white' : s === exerciseState[idx].currentSet ? 'bg-[#1A4FAB] text-white' : 'bg-[#EBEBEB] text-[#5A7A9B]'"
-                >{{ s }}</div>
+                <div v-for="s in def.sets" :key="s" class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all" :class="s < exerciseState[idx].currentSet ? 'bg-[#1B7C3D] text-white' : s === exerciseState[idx].currentSet ? 'bg-[#1A4FAB] text-white' : 'bg-[#EBEBEB] text-[#5A7A9B]'">{{ s }}</div>
               </div>
               <span class="text-sm text-[#5A7A9B]">
                 <span v-if="exerciseState[idx].phase !== 'complete'">Set {{ exerciseState[idx].currentSet }} of {{ def.sets }} — Rep {{ exerciseState[idx].currentRep }} of {{ def.reps }}</span>
                 <span v-else class="text-[#1B7C3D] font-semibold">All sets complete</span>
               </span>
             </div>
-
             <div v-if="exerciseState[idx].phase !== 'complete'" class="mb-5">
-              <div class="flex justify-between text-sm text-[#5A7A9B] mb-2">
-                <span>Reps this set</span>
-                <span>{{ exerciseState[idx].currentRep }} / {{ def.reps }}</span>
-              </div>
+              <div class="flex justify-between text-sm text-[#5A7A9B] mb-2"><span>Reps this set</span><span>{{ exerciseState[idx].currentRep }} / {{ def.reps }}</span></div>
               <div class="h-3 bg-[#EBEBEB] rounded-full overflow-hidden">
                 <div class="h-full rounded-full bg-[#1A4FAB] transition-all duration-300" :style="{ width: `${(exerciseState[idx].currentRep / def.reps) * 100}%` }" />
               </div>
             </div>
-
-            <!-- Hold / rest timer ring -->
             <div v-if="exerciseState[idx].phase === 'holding' || exerciseState[idx].phase === 'resting'" class="flex flex-col items-center mb-5">
               <div class="relative w-28 h-28 mb-2">
                 <svg class="w-28 h-28 -rotate-90" viewBox="0 0 80 80">
@@ -435,43 +645,20 @@ onUnmounted(() => {
 
           <!-- Action buttons -->
           <div class="px-8 pb-8 space-y-3">
-            <button
-              v-if="!cameraActive[idx]"
-              @click="startCamera(idx)"
-              class="w-full py-5 rounded-full font-bold text-base bg-[#F7F9FC] text-[#1A4FAB] border-2 border-[#1A4FAB] hover:bg-[#1A4FAB] hover:text-white transition-all"
-            >Enable camera</button>
-
-            <button
-              v-else-if="exerciseState[idx].phase === 'idle'"
-              @click="startRep(idx)"
-              class="w-full py-5 rounded-full font-bold text-base bg-[#1A4FAB] text-white hover:bg-[#1440A0] transition-colors"
-            >{{ exerciseState[idx].currentRep === 0 && exerciseState[idx].currentSet === 1 ? 'Start exercise' : 'Start rep' }}</button>
-
-            <div v-else-if="exerciseState[idx].phase === 'holding'" class="w-full py-5 rounded-full font-bold text-base bg-[#E65100] text-white text-center">
-              Hold — {{ exerciseState[idx].timer }}s remaining
-            </div>
-
-            <div v-else-if="exerciseState[idx].phase === 'resting'" class="w-full py-5 rounded-full font-bold text-base bg-[#F7F9FC] text-[#E65100] border-2 border-[#E65100] text-center">
-              Rest — next set in {{ exerciseState[idx].timer }}s
-            </div>
-
-            <div v-else-if="exerciseState[idx].phase === 'complete'" class="w-full py-5 rounded-full font-bold text-base bg-[#1B7C3D] text-white text-center">
-              Done for today ✓
-            </div>
-
+            <button v-if="!cameraActive[idx]" @click="startCamera(idx)" class="w-full py-5 rounded-full font-bold text-base bg-[#F7F9FC] text-[#1A4FAB] border-2 border-[#1A4FAB] hover:bg-[#1A4FAB] hover:text-white transition-all">Enable camera</button>
+            <button v-else-if="exerciseState[idx].phase === 'idle'" @click="startRep(idx)" class="w-full py-5 rounded-full font-bold text-base bg-[#1A4FAB] text-white hover:bg-[#1440A0] transition-colors">{{ exerciseState[idx].currentRep === 0 && exerciseState[idx].currentSet === 1 ? 'Start exercise' : 'Start rep' }}</button>
+            <div v-else-if="exerciseState[idx].phase === 'holding'" class="w-full py-5 rounded-full font-bold text-base bg-[#E65100] text-white text-center">Hold — {{ exerciseState[idx].timer }}s remaining</div>
+            <div v-else-if="exerciseState[idx].phase === 'resting'" class="w-full py-5 rounded-full font-bold text-base bg-[#F7F9FC] text-[#E65100] border-2 border-[#E65100] text-center">Rest — next set in {{ exerciseState[idx].timer }}s</div>
+            <div v-else-if="exerciseState[idx].phase === 'complete'" class="w-full py-5 rounded-full font-bold text-base bg-[#1B7C3D] text-white text-center">Done for today ✓</div>
             <div v-if="cameraActive[idx]" class="flex gap-3">
               <button @click="stopCamera(idx)" class="flex-1 py-3 text-sm text-[#5A7A9B] hover:text-[#C62828] transition-colors">Stop camera</button>
-              <button
-                v-if="exerciseState[idx].phase !== 'idle' && exerciseState[idx].phase !== 'complete'"
-                @click="resetExercise(idx)"
-                class="flex-1 py-3 text-sm text-[#5A7A9B] hover:text-[#1A4FAB] transition-colors"
-              >Reset</button>
+              <button v-if="exerciseState[idx].phase !== 'idle' && exerciseState[idx].phase !== 'complete'" @click="resetExercise(idx)" class="flex-1 py-3 text-sm text-[#5A7A9B] hover:text-[#1A4FAB] transition-colors">Reset</button>
             </div>
           </div>
+
         </div>
       </div>
 
-      <!-- Bottom return button always visible -->
       <div class="text-center mt-12">
         <button @click="allExercisesDone ? finishAndReturn() : skipAndReturn()" class="text-base text-[#5A7A9B] hover:text-[#1A1A1A] transition-colors font-semibold">
           {{ allExercisesDone ? 'All done — back to check-in' : 'Skip exercises and return' }}
@@ -483,6 +670,113 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+/* ━━ PAGE TRANSITIONS ━━ */
 .fade-scale-enter-active, .fade-scale-leave-active { transition: opacity 0.4s ease, transform 0.4s ease; }
 .fade-scale-enter-from, .fade-scale-leave-to { opacity: 0; transform: scale(0.97); }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   CHIN TUCK
+   Head+neck group slides -24px backward, holds, returns.
+   Phase labels alternate. 4.5s cycle.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+@keyframes ctSlide {
+  0%,  10%  { transform: translateX(0px); }
+  28%, 58%  { transform: translateX(-24px); }
+  76%, 100% { transform: translateX(0px); }
+}
+.ct-head { animation: ctSlide 4.5s ease-in-out infinite; }
+
+@keyframes ctPhaseN {
+  0%,  10%  { opacity: 1; }
+  24%, 66%  { opacity: 0; }
+  78%, 100% { opacity: 1; }
+}
+.ct-phase-neutral { animation: ctPhaseN 4.5s ease-in-out infinite; }
+
+@keyframes ctPhaseT {
+  0%,  23%  { opacity: 0; }
+  33%, 55%  { opacity: 1; }
+  70%, 100% { opacity: 0; }
+}
+.ct-phase-tucked { animation: ctPhaseT 4.5s ease-in-out infinite; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   NECK ROTATION
+   Only the face features (eyes, nose line, mouth) rotate.
+   The skull circle, hair, and ears stay perfectly fixed.
+   transform-origin is the absolute SVG coordinate of the head centre
+   so the rotation pivots exactly at the right point.
+   5.5s cycle: forward → left (hold) → forward → right (hold).
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+@keyframes nrFaceRotate {
+  0%,  8%   { transform: rotate(0deg); }
+  22%, 38%  { transform: rotate(-42deg); }
+  48%, 52%  { transform: rotate(0deg); }
+  66%, 82%  { transform: rotate(42deg); }
+  92%, 100% { transform: rotate(0deg); }
+}
+.nr-face {
+  transform-origin: 150px 80px;
+  animation: nrFaceRotate 5.5s ease-in-out infinite;
+}
+
+@keyframes nrCentre {
+  0%,  8%   { opacity: 1; }
+  16%, 44%  { opacity: 0; }
+  52%, 60%  { opacity: 1; }
+  68%, 92%  { opacity: 0; }
+  100%      { opacity: 1; }
+}
+.nr-phase-centre { animation: nrCentre 5.5s ease-in-out infinite; }
+
+@keyframes nrPLeft {
+  0%,  12%  { opacity: 0; }
+  20%, 40%  { opacity: 1; }
+  48%, 100% { opacity: 0; }
+}
+.nr-phase-left { animation: nrPLeft 5.5s ease-in-out infinite; }
+
+@keyframes nrPRight {
+  0%,  60%  { opacity: 0; }
+  68%, 88%  { opacity: 1; }
+  96%, 100% { opacity: 0; }
+}
+.nr-phase-right { animation: nrPRight 5.5s ease-in-out infinite; }
+
+@keyframes nrLblLeft {
+  0%,  12%  { opacity: 0.3; }
+  20%, 38%  { opacity: 1; }
+  48%, 100% { opacity: 0.3; }
+}
+.nr-lbl-l { animation: nrLblLeft 5.5s ease-in-out infinite; }
+
+@keyframes nrLblRight {
+  0%,  60%  { opacity: 0.3; }
+  68%, 88%  { opacity: 1; }
+  96%, 100% { opacity: 0.3; }
+}
+.nr-lbl-r { animation: nrLblRight 5.5s ease-in-out infinite; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ISOMETRICS
+   Palm presses -12px toward the forehead. 2.6s cycle.
+   Force arrows and HOLD STILL badge pulse in sync.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+@keyframes isoPress {
+  0%,  100% { transform: translateX(0px); }
+  35%,  65% { transform: translateX(-12px); }
+}
+.iso-palm { animation: isoPress 2.6s ease-in-out infinite; }
+
+@keyframes isoForce {
+  0%,  100% { opacity: 0.18; }
+  35%,  65% { opacity: 1; }
+}
+.iso-force { animation: isoForce 2.6s ease-in-out infinite; }
+
+@keyframes isoHold {
+  0%,  100% { opacity: 0.45; }
+  50%       { opacity: 1; }
+}
+.iso-hold { animation: isoHold 2.6s ease-in-out infinite; }
 </style>
