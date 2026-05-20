@@ -51,7 +51,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-4 text-[#86868b] text-sm">
         <div>
           <span class="text-[#1d1d1f] font-semibold">Con<span class="text-[#007aff]">covery</span></span>
-          © 2026. Built for Victorian community sport players.
+          © 2026. Built for Australian community sport players.
         </div>
         <div class="flex gap-6">
           <a href="#" class="hover:text-[#007aff] transition-colors">Privacy Policy</a>
