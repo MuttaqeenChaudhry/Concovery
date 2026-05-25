@@ -1,5 +1,7 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { Line } from 'vue-chartjs'
 import BlurReveal from '@/components/ui/blur-reveal/BlurReveal.vue'
 import {
@@ -10,6 +12,8 @@ import {
 import axios from 'axios'
 
 ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, CategoryScale, LinearScale)
+
+gsap.registerPlugin(ScrollTrigger)
 
 // Close dropdowns when clicking outside
 const vClickOutside = {
@@ -60,7 +64,7 @@ function getRegionTextFill(id) {
   return isActive ? '#ffffff' : '#1A1A1A'
 }
 
-// 
+//
 // DROPDOWN AND FILTER STATE
 //
 
@@ -77,7 +81,7 @@ const loadingAge        = ref(false)
 const loadingTrend      = ref(false)
 const loadingComparison = ref(false)
 
-// 
+//
 // SPORT AND AGE RAW DATA
 // Sport data  = hospitalisations for a specific sport, split by sex.
 // Age data    = hospitalisations for a specific age group across ALL sports.
@@ -116,7 +120,7 @@ function animateTo(startVal, endVal, setter) {
   requestAnimationFrame(step)
 }
 
-// 
+//
 // COUNT-UP ANIMATION
 // Used by Beat 1, Beat 2 detail card, and Beat 3
 //
@@ -149,10 +153,10 @@ watch(sportFemaleFillPct, val => animateTo(animSportFemale.value, val, v => anim
 watch(ageMaleFillPct,     val => animateTo(animAgeMale.value,     val, v => animAgeMale.value     = v))
 watch(ageFemaleFillPct,   val => animateTo(animAgeFemale.value,   val, v => animAgeFemale.value   = v))
 
-// 
+//
 // SPORT ICON + COLOUR MAP
 // Shared helper functions used by Beat 1 and Beat 2 detail card
-// 
+//
 
 function getSportIconBg(name) {
   const n = (name || '').toLowerCase()
@@ -221,9 +225,9 @@ const sportIconSvg = computed(() => getSportIconSvgPath(sportsType.value))
 const comparisonSportIconBg  = computed(() => getSportIconBg(selectedComparisonSport.value?.name))
 const comparisonSportIconSvg = computed(() => getSportIconSvgPath(selectedComparisonSport.value?.name))
 
-// 
+//
 // AGE GROUP ICON ROW
-// 
+//
 
 const heightMap = {
   '0-4':   20,
@@ -248,9 +252,9 @@ async function selectAgeGroup(label) {
   await fetchAgeData()
 }
 
-// 
+//
 // SPORT COMPARISON DATA
-// 
+//
 
 const comparisonSports        = ref([])
 const selectedComparisonSport = ref(null)
@@ -277,7 +281,7 @@ watch(selectedComparisonSport, (next, prev) => {
 
 //
 // TREND CHART DATA
-// 
+//
 
 const trendLabels            = ref([])
 const trendMaleData          = ref([])
@@ -306,9 +310,47 @@ const lineOptions = {
   },
 }
 
-// 
+function setupStatStrip() {
+  gsap.set('.kyr-stat-card', { opacity: 0, y: 30 })
+  ScrollTrigger.create({
+    trigger: '.kyr-stats-section', start: 'top 80%', once: true,
+    onEnter: () => gsap.to('.kyr-stat-card', { opacity: 1, y: 0, duration: 0.7, stagger: 0.15, ease: 'power2.out' })
+  })
+}
+
+function setupBeatGrids() {
+  const grids = [
+    { left: '.beat1-left', right: '.beat1-right', trigger: '.beat1-section' },
+    { left: '.beat2-left', right: '.beat2-right', trigger: '.beat2-section' },
+    { left: '.beat3-left', right: '.beat3-right', trigger: '.beat3-section' },
+    { left: '.beat5-left', right: '.beat5-right', trigger: '.beat5-section' },
+  ]
+  grids.forEach(({ left, right, trigger }) => {
+    gsap.set(left,  { opacity: 0, x: -44 })
+    gsap.set(right, { opacity: 0, x:  44 })
+    ScrollTrigger.create({
+      trigger, start: 'top 75%', once: true,
+      onEnter: () => {
+        gsap.to(left,  { opacity: 1, x: 0, duration: 0.85, ease: 'power2.out' })
+        gsap.to(right, { opacity: 1, x: 0, duration: 0.85, ease: 'power2.out', delay: 0.15 })
+      }
+    })
+  })
+  gsap.set('.beat4-card', { opacity: 0, y: 32 })
+  ScrollTrigger.create({
+    trigger: '.beat4-section', start: 'top 78%', once: true,
+    onEnter: () => gsap.to('.beat4-card', { opacity: 1, y: 0, duration: 0.85, ease: 'power2.out' })
+  })
+  gsap.set('.beat6-card', { opacity: 0, y: 28 })
+  ScrollTrigger.create({
+    trigger: '.beat6-section', start: 'top 80%', once: true,
+    onEnter: () => gsap.to('.beat6-card', { opacity: 1, y: 0, duration: 0.7, stagger: 0.15, ease: 'power2.out' })
+  })
+}
+
+//
 // API CALLS
-// 
+//
 
 const BASE = 'https://site--concovery-backend--gvxxw7q2vn57.code.run/postgres'
 
@@ -394,13 +436,20 @@ onMounted(async () => {
   await fetchTrendData()
   await fetchComparisonData()
   filtersApplied.value = true
+  setupStatStrip()
+  setupBeatGrids()
 })
+
+onUnmounted(() => {
+  ScrollTrigger.getAll().forEach(t => t.kill())
+})
+
 </script>
 
 <template>
   <div class="bg-white min-h-screen">
 
-    <!-- 
+    <!--
       HERO SECTION
     -->
     <section class="kyr-hero text-white">
@@ -462,10 +511,10 @@ onMounted(async () => {
       </div>
     </section>
 
-    <!-- 
+    <!--
       BEAT 1 - YOUR SPORT
     -->
-    <section class="py-24" style="background:#EBF3FF;">
+    <section class="py-24 beat1-section" style="background:#EBF3FF;">
       <div class="max-w-[1200px] mx-auto px-10">
 
         <div class="mb-3">
@@ -479,7 +528,7 @@ onMounted(async () => {
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
           <!-- Left: selector + context -->
-          <div class="flex flex-col justify-between">
+          <div class="flex flex-col justify-between beat1-left">
             <div>
               <p class="text-[#5A7A9B] text-lg leading-relaxed mb-8">Select your sport and the body diagram on the right updates immediately to show the real hospitalisation split between male and female players in Australian community sport.</p>
 
@@ -533,7 +582,7 @@ onMounted(async () => {
           </div>
 
           <!-- Right: interactive sport breakdown card -->
-          <div class="bg-[#0A1628] rounded-3xl p-8 text-white relative overflow-hidden">
+          <div class="bg-[#0A1628] rounded-3xl p-8 text-white relative overflow-hidden beat1-right">
             <div class="absolute inset-0 opacity-[0.04] pointer-events-none">
               <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
                 <pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="white"/></pattern>
@@ -621,10 +670,10 @@ onMounted(async () => {
       </div>
     </section>
 
-    <!-- 
+    <!--
       BEAT 2 - SPORT RISK LADDER
    -->
-    <section class="py-24" style="background: linear-gradient(160deg, #EBF3FF 0%, #DEF0FF 50%, #EBF3FF 100%);">
+    <section class="py-24 beat2-section" style="background: linear-gradient(160deg, #EBF3FF 0%, #DEF0FF 50%, #EBF3FF 100%);">
       <div class="max-w-[1200px] mx-auto px-10">
 
         <div class="mb-3">
@@ -641,7 +690,7 @@ onMounted(async () => {
         <div v-else-if="comparisonSports.length" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
           <!-- Dark bar list -->
-          <div class="bg-[#0A1628] rounded-2xl p-6 shadow-2xl">
+          <div class="bg-[#0A1628] rounded-2xl p-6 shadow-2xl beat2-left">
             <div class="flex justify-between items-center mb-6">
               <span class="text-white/40 text-xs font-medium uppercase tracking-wider">Rate per 100,000 participants</span>
               <span class="text-white/40 text-xs">AIHW 2023-24</span>
@@ -662,8 +711,9 @@ onMounted(async () => {
           </div>
 
           <!-- Detail card - interactive with icon, count-up and risk bar -->
-          <transition name="sport-name" mode="out-in">
-            <div v-if="selectedComparisonSport" :key="selectedComparisonSport.name" class="bg-white rounded-2xl p-8 border border-[#EBEBEB] shadow-xl relative overflow-hidden">
+          <div class="beat2-right">
+            <transition name="sport-name" mode="out-in">
+              <div v-if="selectedComparisonSport" :key="selectedComparisonSport.name" class="bg-white rounded-2xl p-8 border border-[#EBEBEB] shadow-xl relative overflow-hidden">
               <div class="absolute top-0 right-0 w-40 h-40 rounded-full blur-3xl opacity-5 pointer-events-none transition-all duration-700" :style="{ background: comparisonSportIconBg, transform: 'translate(30%, -30%)' }"/>
               <div class="relative z-10">
                 <div class="flex items-center gap-3 mb-4">
@@ -707,15 +757,16 @@ onMounted(async () => {
               </div>
             </div>
           </transition>
+          </div>
 
         </div>
       </div>
     </section>
 
-    <!-- 
+    <!--
       BEAT 3 - WHO GETS HURT MOST
     -->
-    <section class="py-24" style="background: linear-gradient(135deg, #F0F7FF 0%, #DEF0FF 40%, #EBF3FF 70%, #F5F9FF 100%);">
+    <section class="py-24 beat3-section" style="background: linear-gradient(135deg, #F0F7FF 0%, #DEF0FF 40%, #EBF3FF 70%, #F5F9FF 100%);">
       <div class="max-w-[1200px] mx-auto px-10">
 
         <div class="text-center mb-14">
@@ -727,7 +778,7 @@ onMounted(async () => {
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
           <!-- Left: icon row as selector + context -->
-          <div class="flex flex-col justify-between">
+          <div class="flex flex-col justify-between beat3-left">
             <div>
               <p class="text-[#5A7A9B] text-lg leading-relaxed mb-8">Tap any age group below to see the exact hospitalisation numbers for that bracket across all Australian community sport.</p>
 
@@ -766,7 +817,7 @@ onMounted(async () => {
           </div>
 
           <!-- Right: interactive age breakdown card -->
-          <div class="bg-[#0A1628] rounded-3xl p-8 text-white relative overflow-hidden">
+          <div class="bg-[#0A1628] rounded-3xl p-8 text-white relative overflow-hidden beat3-right">
             <!-- Dot grid -->
             <div class="absolute inset-0 opacity-[0.04] pointer-events-none">
               <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
@@ -873,19 +924,19 @@ onMounted(async () => {
       </div>
     </section>
 
-    <!-- 
+    <!--
       BEAT 4 - THIS IS WHY THE RULES EXIST
      -->
-    <section class="py-24" style="background: linear-gradient(180deg, #EBF3FF 0%, #D6EAFF 35%, #E8F2FF 65%, #F0F6FF 100%);">
+    <section class="py-24 beat4-section" style="background: linear-gradient(180deg, #EBF3FF 0%, #D6EAFF 35%, #E8F2FF 65%, #F0F6FF 100%);">
       <div class="max-w-[1200px] mx-auto px-10">
 
         <div class="text-center mb-12">
           <span class="inline-block bg-[#1A4FAB]/10 text-[#1A4FAB] text-xs font-semibold px-4 py-1.5 rounded-full mb-4 tracking-widest uppercase">10-year trend</span>
-          <h2 class="text-4xl font-bold text-[#1A1A1A] mb-4">This is why the 2021 rules exist.</h2>
+          <h2 class="text-4xl font-bold text-[#1A1A1A] mb-4">This is why the 21-Day rule exists.</h2>
           <p class="text-[#5A7A9B] text-lg max-w-2xl mx-auto">A decade of rising hospitalisations led to a national protocol. Here is what the data looked like on the way there.</p>
         </div>
 
-        <div class="bg-white rounded-3xl p-10 border border-[#EBEBEB] shadow-sm">
+        <div class="bg-white rounded-3xl p-10 border border-[#EBEBEB] shadow-sm beat4-card">
           <div class="h-80 mb-8">
             <div v-if="loadingTrend" class="h-full flex items-center justify-center text-[#5A7A9B] animate-pulse">Loading trend data...</div>
             <Line v-else :data="trendChartData" :options="lineOptions" />
@@ -936,10 +987,10 @@ onMounted(async () => {
       </div>
     </section>
 
-    <!-- 
+    <!--
       BEAT 5 - BRAIN SCIENCE
  -->
-    <section class="py-24" style="background: linear-gradient(145deg, #F5F9FF 0%, #E8F2FF 30%, #D8ECFF 55%, #EBF3FF 100%);">
+    <section class="py-24 beat5-section" style="background: linear-gradient(145deg, #F5F9FF 0%, #E8F2FF 30%, #D8ECFF 55%, #EBF3FF 100%);">
       <div class="max-w-[1200px] mx-auto px-10">
 
         <div class="text-center mb-14">
@@ -951,7 +1002,7 @@ onMounted(async () => {
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
 
           <!-- Brain SVG -->
-          <div class="flex flex-col items-center bg-[#F7F9FC] rounded-3xl p-8 border border-[#EBEBEB]">
+          <div class="flex flex-col items-center bg-[#F7F9FC] rounded-3xl p-8 border border-[#EBEBEB] beat5-left">
             <svg viewBox="0 0 400 560" class="w-full max-w-[420px]">
               <path d="M 200 40 Q 290 40 340 120 Q 360 180 350 240 L 350 280 Q 355 320 340 360 Q 320 400 280 420 L 260 460 Q 240 510 200 530 Q 160 510 140 460 L 120 420 Q 80 400 60 360 Q 45 320 50 280 L 50 240 Q 40 180 60 120 Q 110 40 200 40 Z" fill="white" stroke="#EBEBEB" stroke-width="2"/>
               <g @click="selectRegion('frontal')" @mouseenter="hoveredRegion = 'frontal'" @mouseleave="hoveredRegion = null" class="cursor-pointer">
@@ -997,7 +1048,7 @@ onMounted(async () => {
           </div>
 
           <!-- Symptom panel -->
-          <div class="lg:sticky lg:top-24">
+          <div class="lg:sticky lg:top-24 beat5-right">
             <transition name="fade-up" mode="out-in">
               <div v-if="!selectedRegion" key="placeholder" class="bg-[#F7F9FC] rounded-3xl p-10 text-center border border-[#EBEBEB]">
                 <div class="w-20 h-20 rounded-full bg-[#1A4FAB]/10 flex items-center justify-center mx-auto mb-6">
@@ -1034,7 +1085,7 @@ onMounted(async () => {
     <!--
       BEAT 6 - END WITH CONTROL
    -->
-    <section style="background:#0A1628;" class="py-24">
+    <section style="background:#0A1628;" class="py-24 beat6-section">
       <div class="max-w-[1200px] mx-auto px-10">
         <div class="text-center mb-14">
           <h2 class="text-4xl font-bold text-white mb-4">You are already ahead of most players.</h2>
@@ -1042,7 +1093,7 @@ onMounted(async () => {
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
           <router-link to="/iteration3/stagedrecovery" class="block">
-            <div class="bg-[#1A4FAB] rounded-3xl p-10 h-full hover:bg-[#1440A0] transition-colors group">
+            <div class="bg-[#1A4FAB] rounded-3xl p-10 h-full hover:bg-[#1440A0] transition-colors group beat6-card">
               <div class="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center mb-6">
                 <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
               </div>
@@ -1055,7 +1106,7 @@ onMounted(async () => {
             </div>
           </router-link>
           <router-link to="/locatesupport" class="block">
-            <div class="bg-white/5 border border-white/10 rounded-3xl p-10 h-full hover:bg-white/10 transition-colors group">
+            <div class="bg-white/5 border border-white/10 rounded-3xl p-10 h-full hover:bg-white/10 transition-colors group beat6-card">
               <div class="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center mb-6">
                 <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
               </div>

@@ -1,20 +1,146 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { ScrollToPlugin } from 'gsap/ScrollToPlugin'
+import { ref, onMounted, onUnmounted } from 'vue'
 
-const fabOpen = ref(false)
+gsap.registerPlugin(ScrollTrigger, ScrollToPlugin)
+
+const fabOpen        = ref(false)
+const showScrollTop  = ref(false)
+const scrollArrowRef = ref<HTMLElement | null>(null)
+
+function scrollToContent() {
+  gsap.to(window, { duration: 1, scrollTo: '.stats-section', ease: 'power2.inOut' })
+}
+
+function scrollToTop() {
+  gsap.to(window, { duration: 1, scrollTo: 0, ease: 'power2.inOut' })
+}
+
+// ── GSAP: hero entrance ───────────────────────────────────────────────────────
+// Fires on load. Badge → title → subtitle → buttons, each staggered in.
+function setupHeroEntrance() {
+  gsap.set(['.hero-badge', '.hero-title', '.hero-sub', '.hero-actions'], {
+    opacity: 0, y: 28
+  })
+
+  const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
+  tl.to('.hero-badge',   { opacity: 1, y: 0, duration: 0.65 }, 0.25)
+    .to('.hero-title',   { opacity: 1, y: 0, duration: 0.85 }, 0.5)
+    .to('.hero-sub',     { opacity: 1, y: 0, duration: 0.65 }, 1.0)
+    .to('.hero-actions', { opacity: 1, y: 0, duration: 0.65 }, 1.25)
+}
+
+// ── GSAP: hero image subtle parallax as you scroll down ───────────────────────
+function setupHeroParallax() {
+  gsap.to('.hero-image', {
+    yPercent: 18,
+    ease: 'none',
+    scrollTrigger: {
+      trigger: '.hero',
+      start: 'top top',
+      end: 'bottom top',
+      scrub: true,
+    }
+  })
+}
+
+// ── GSAP: stat items stagger in ───────────────────────────────────────────────
+function setupStatsAnimation() {
+  gsap.set('.stat-item', { opacity: 0, y: 40 })
+
+  ScrollTrigger.create({
+    trigger: '.stats-section',
+    start: 'top 78%',
+    once: true,
+    onEnter: () => {
+      gsap.to('.stat-item', {
+        opacity: 1, y: 0,
+        duration: 0.7,
+        stagger: 0.15,
+        ease: 'power2.out',
+      })
+    }
+  })
+}
+
+// ── GSAP: path cards slide in from opposite sides ────────────────────────────
+function setupPathCardsAnimation() {
+  const cards = document.querySelectorAll('.path-card')
+  if (cards.length < 2) return
+
+  gsap.set(cards[0], { opacity: 0, x: -50 })
+  gsap.set(cards[1], { opacity: 0, x:  50 })
+
+  ScrollTrigger.create({
+    trigger: '.path-grid',
+    start: 'top 75%',
+    once: true,
+    onEnter: () => {
+      gsap.to(cards[0], { opacity: 1, x: 0, duration: 0.8, ease: 'power2.out' })
+      gsap.to(cards[1], { opacity: 1, x: 0, duration: 0.8, ease: 'power2.out', delay: 0.15 })
+    }
+  })
+}
+
+// ── GSAP: Day 7 section — text left, card right ───────────────────────────────
+function setupDay7Animation() {
+  const grid = document.querySelector('.recovery-grid')
+  if (!grid) return
+  const left  = grid.children[0] as HTMLElement
+  const right = grid.children[1] as HTMLElement
+
+  gsap.set(left,  { opacity: 0, x: -50 })
+  gsap.set(right, { opacity: 0, x:  50 })
+
+  ScrollTrigger.create({
+    trigger: '.recovery-grid',
+    start: 'top 72%',
+    once: true,
+    onEnter: () => {
+      gsap.to(left,  { opacity: 1, x: 0, duration: 0.85, ease: 'power2.out' })
+      gsap.to(right, { opacity: 1, x: 0, duration: 0.85, ease: 'power2.out', delay: 0.18 })
+    }
+  })
+}
+
+// ── GSAP: Football section — animation panel left, text right ─────────────────
+function setupFootballAnimation() {
+  const grid = document.querySelector('.lottie-grid')
+  if (!grid) return
+  const left  = grid.children[0] as HTMLElement
+  const right = grid.children[1] as HTMLElement
+
+  gsap.set(left,  { opacity: 0, x: -50 })
+  gsap.set(right, { opacity: 0, x:  50 })
+
+  ScrollTrigger.create({
+    trigger: '.lottie-grid',
+    start: 'top 75%',
+    once: true,
+    onEnter: () => {
+      gsap.to(left,  { opacity: 1, x: 0, duration: 0.85, ease: 'power2.out' })
+      gsap.to(right, { opacity: 1, x: 0, duration: 0.85, ease: 'power2.out', delay: 0.18 })
+    }
+  })
+}
 
 onMounted(() => {
+  // Close FAB when clicking outside
   document.addEventListener('click', (e) => {
     const fab = document.querySelector('.fab-wrap')
     if (fab && !fab.contains(e.target as Node)) fabOpen.value = false
   })
 
+  // Existing: fade-up IntersectionObserver (kept exactly as before)
   const fadeObserver = new IntersectionObserver(
     (entries) => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible') }),
     { threshold: 0.1 }
   )
   document.querySelectorAll('.fade-up').forEach(el => fadeObserver.observe(el))
 
+  // Existing: count-up stats
   const statsObserver = new IntersectionObserver(
     (entries) => {
       entries.forEach(entry => {
@@ -39,6 +165,7 @@ onMounted(() => {
   const statsEl = document.getElementById('statsRow')
   if (statsEl) statsObserver.observe(statsEl)
 
+  // Existing: progress bars
   const progressEl = document.getElementById('progressCard')
   if (progressEl) {
     const progressObserver = new IntersectionObserver(
@@ -54,6 +181,33 @@ onMounted(() => {
     )
     progressObserver.observe(progressEl)
   }
+
+  // Existing: scroll arrow bounce
+  if (scrollArrowRef.value) {
+    gsap.to(scrollArrowRef.value, {
+      y: 10, duration: 0.9, ease: 'power1.inOut', yoyo: true, repeat: -1,
+    })
+  }
+
+  // Existing: scroll-to-top visibility trigger
+  ScrollTrigger.create({
+    trigger: '.stats-section',
+    start: 'top 80%',
+    onEnter:     () => { showScrollTop.value = true },
+    onLeaveBack: () => { showScrollTop.value = false },
+  })
+
+  // New GSAP polish — all additive, nothing removed
+  setupHeroEntrance()
+  setupHeroParallax()
+  setupStatsAnimation()
+  setupPathCardsAnimation()
+  setupDay7Animation()
+  setupFootballAnimation()
+})
+
+onUnmounted(() => {
+  ScrollTrigger.getAll().forEach(t => t.kill())
 })
 
 const animActive = ref(true)
@@ -69,7 +223,7 @@ const barsVisible = ref(false)
 <template>
   <div>
 
-    <!-- HERO - always dark -->
+    <!-- HERO -->
     <section class="hero">
       <div class="hero-overlay" />
       <div class="hero-lines" />
@@ -126,10 +280,18 @@ const barsVisible = ref(false)
             stroke="#38bfff" stroke-width="1.5" fill="none"/>
         </svg>
       </div>
+
+      <button ref="scrollArrowRef" class="scroll-down-btn" @click="scrollToContent" aria-label="Scroll down">
+        <span class="scroll-down-label">Scroll</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+          fill="none" stroke="#38bfff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m6 9 6 6 6-6"/>
+        </svg>
+      </button>
     </section>
 
 
-    <!-- STATS - always light blue -->
+    <!-- STATS -->
     <div class="stats-section">
       <div class="stats-row" id="statsRow">
         <div class="stat-item">
@@ -157,7 +319,7 @@ const barsVisible = ref(false)
     </div>
 
 
-    <!-- WHERE ARE YOU RIGHT NOW? - always light -->
+    <!-- WHERE ARE YOU RIGHT NOW? -->
     <section class="section bg-light fade-up">
       <div class="container">
         <div class="eyebrow">Get Started</div>
@@ -209,7 +371,7 @@ const barsVisible = ref(false)
     </section>
 
 
-    <!-- DAY 7 TRAP - always dark navy -->
+    <!-- DAY 7 TRAP -->
     <section class="section bg-deep fade-up">
       <div class="container">
         <div class="recovery-grid">
@@ -282,7 +444,7 @@ const barsVisible = ref(false)
     </section>
 
 
-    <!-- FOOTBALL ANIMATION - always lighter blue -->
+    <!-- FOOTBALL ANIMATION -->
     <section class="section bg-lighter fade-up">
       <div class="container">
         <div class="lottie-grid">
@@ -372,6 +534,15 @@ const barsVisible = ref(false)
     </section>
 
 
+    <Transition name="scroll-top-fade">
+      <button v-if="showScrollTop" class="scroll-top-btn" @click="scrollToTop" aria-label="Back to top">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+          fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m18 15-6-6-6 6"/>
+        </svg>
+      </button>
+    </Transition>
+
   </div>
 </template>
 
@@ -379,38 +550,26 @@ const barsVisible = ref(false)
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
 
-/* 
-   All colours are hardcoded below.
-   The dark/light toggle on the navbar has zero effect
-   on this page.
- */
-
 .always-ice { color: #38bfff !important; }
 
-/* Layout */
 .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
 .section    { padding: 96px 24px; }
 
-/* Section backgrounds */
 .bg-light   { background: #f0f7ff; }
 .bg-lighter { background: #e8f3ff; }
 .bg-deep    { background: #0f2040; border-top: 1px solid rgba(255,255,255,0.06); }
 
-/* Scroll animations */
 .fade-up { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; }
 .fade-up.visible { opacity: 1; transform: none; }
 
-/* Labels */
 .eyebrow       { font-size: 11px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: #38bfff; margin-bottom: 16px; display: block; }
 .eyebrow-light { color: rgba(56,191,255,0.65); }
 
-/* Section header */
 .section-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 48px; flex-wrap: wrap; gap: 16px; }
 .section-title  { font-size: clamp(28px,4vw,40px); font-weight: 800; color: #0a1628; letter-spacing: -0.03em; }
 .section-sub    { font-size: 14px; font-weight: 300; color: #4a6882; max-width: 260px; line-height: 1.6; }
 .body-text      { font-size: 16px; font-weight: 300; color: #4a6882; line-height: 1.8; max-width: 460px; }
 
-/* Buttons */
 .btn-primary {
   display: inline-flex; align-items: center; gap: 8px;
   background: #38bfff; color: #07090e;
@@ -419,7 +578,6 @@ const barsVisible = ref(false)
   transition: opacity 0.2s, transform 0.15s;
 }
 .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
-.btn-large { padding: 18px 36px; font-size: 15px; }
 
 .btn-white {
   display: inline-flex; align-items: center; gap: 8px;
@@ -429,9 +587,7 @@ const barsVisible = ref(false)
 }
 .btn-white:hover { opacity: 0.9; }
 
-/*
-   HERO
-*/
+/* ── HERO ── */
 .hero {
   position: relative; min-height: 100vh;
   display: flex; align-items: center;
@@ -484,9 +640,17 @@ const barsVisible = ref(false)
 .ekg-svg { width: 200%; height: 100%; animation: ekgScroll 3s linear infinite; }
 @keyframes ekgScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
-/* 
-   STATS
-*/
+.scroll-down-btn {
+  position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
+  z-index: 10; background: none; border: none; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px;
+}
+.scroll-down-label {
+  font-size: 10px; font-weight: 600; letter-spacing: 2.5px;
+  text-transform: uppercase; color: rgba(255,255,255,0.4);
+}
+
+/* ── STATS ── */
 .stats-section { background: #e8f3ff; }
 .stats-row { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(3,1fr); }
 .stat-item { padding: 56px 40px; text-align: center; position: relative; transition: background 0.3s; }
@@ -504,8 +668,7 @@ const barsVisible = ref(false)
 .stat-desc { font-size: 13px; font-weight: 300; color: #4a6882; line-height: 1.6; }
 .stat-desc strong { display: block; color: #0a1628; font-weight: 600; font-size: 15px; margin-bottom: 4px; }
 
-/* 
-   PATH CARDS - white default, dark navy on hover */
+/* ── PATH CARDS ── */
 .path-grid {
   display: grid; grid-template-columns: 1fr 1fr;
   gap: 1px; background: rgba(56,191,255,0.15);
@@ -532,8 +695,7 @@ const barsVisible = ref(false)
 .path-title { font-size: 28px; font-weight: 800; color: #0a1628; letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 16px; transition: color 0.25s; }
 .path-desc  { font-size: 14px; font-weight: 300; color: #4a6882; line-height: 1.75; margin-bottom: 32px; max-width: 380px; transition: color 0.25s; }
 
-/* 
-   DAY 7 SECTION */
+/* ── DAY 7 ── */
 .recovery-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
 .recovery-title { font-size: clamp(32px,5vw,52px); font-weight: 900; letter-spacing: -0.03em; line-height: 1.05; color: white; margin-bottom: 24px; }
 .recovery-body  { font-size: 15px; font-weight: 300; color: rgba(255,255,255,0.6); line-height: 1.75; margin-bottom: 14px; }
@@ -553,9 +715,7 @@ const barsVisible = ref(false)
 .trap-text      { font-size: 13px; color: rgba(255,255,255,0.75); line-height: 1.6; }
 .trap-text strong { color: #38bfff; }
 
-/* 
-   FOOTBALL ANIMATION
- */
+/* ── FOOTBALL ── */
 .lottie-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
 .fp-wrap {
   position: relative; border-radius: 20px; overflow: hidden;
@@ -618,13 +778,18 @@ const barsVisible = ref(false)
   70%, 100% { transform: rotate(0deg); }
 }
 
-/* 
-   CTA
- */
-.cta-section { background: #07090e; padding: 112px 24px; }
-.cta-inner   { text-align: center; }
-.cta-eyebrow { font-size: 11px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase; color: rgba(255,255,255,0.28); margin-bottom: 32px; }
-.cta-title   { font-size: clamp(56px,12vw,130px); font-weight: 900; letter-spacing: -0.04em; line-height: 0.9; color: white; margin-bottom: 24px; }
-.cta-sub     { font-size: 15px; font-weight: 300; color: rgba(255,255,255,0.4); margin-bottom: 48px; }
-.cta-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+/* ── SCROLL TO TOP ── */
+.scroll-top-btn {
+  position: fixed; bottom: 36px; right: 36px; z-index: 100;
+  width: 48px; height: 48px; border-radius: 50%;
+  background: #1A4FAB; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 20px rgba(26,79,171,0.45);
+  transition: background 0.2s, transform 0.15s;
+}
+.scroll-top-btn:hover { background: #38bfff; transform: translateY(-3px); }
+.scroll-top-fade-enter-active,
+.scroll-top-fade-leave-active { transition: opacity 0.35s ease, transform 0.35s ease; }
+.scroll-top-fade-enter-from,
+.scroll-top-fade-leave-to     { opacity: 0; transform: translateY(12px); }
 </style>

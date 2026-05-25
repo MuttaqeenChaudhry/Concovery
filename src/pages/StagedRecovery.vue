@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import BlurReveal from '@/components/ui/blur-reveal/BlurReveal.vue'
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
+gsap.registerPlugin(ScrollTrigger)
 
 const router = useRouter()
 
-// 
+//
 // TYPE DEFINITIONS
-// 
+//
 
 interface Stage {
   id: number
@@ -30,10 +33,10 @@ const exerciseDefinitions = [
   { name: 'Neck Isometrics', sets: 3, reps: 8  },
 ]
 
-// 
+//
 // 21-DAY DATA
 // Source: Giza and Hovda 2014 (Neurometabolic Cascade), AIS 2024 Return to Play Protocol
-// 
+//
 
 const dayData: Record<number, {
   stage: number; stageName: string; brainRecoveryPct: number
@@ -400,9 +403,9 @@ const dayData: Record<number, {
   },
 }
 
-// 
+//
 // SECTION 1 - DATE AND DAY TRACKING
-// 
+//
 
 const injuryDate           = ref('')
 const daysSinceInjury      = ref<number | null>(null)
@@ -410,9 +413,9 @@ const selectedDay          = ref<number | null>(null)
 // Toggles between plain English (true) and scientific (false) brain description
 const showSimpleDescription = ref(true)
 
-// 
+//
 // SECTION 2 - CALENDAR
-// 
+//
 
 const showCalendar  = ref(false)
 const today         = new Date()
@@ -453,10 +456,10 @@ function formatDisplayDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-// 
+//
 // SECTION 3 - CHECK-IN MODAL
 // Step 1: Sleep  Step 2: Symptoms  Step 3: Exercises (Stage 2+)  Step 4: Journal
-// 
+//
 
 const showCheckInModal = ref(false)
 const checkInStep      = ref(1)
@@ -489,11 +492,11 @@ function goToExercises() {
   router.push('/exercises')
 }
 
-// 
+//
 // SECTION 4 - SLEEP CHECK-IN
 // Three consecutive nights of poor sleep triggers a GP warning.
 // Saved to localStorage under 'concovery_sleep'
-// 
+//
 
 const sleepQuality   = ref<'well' | 'okay' | 'poorly' | null>(null)
 const sleepHistory   = ref<{ date: string; quality: string; day: number }[]>([])
@@ -514,10 +517,10 @@ function submitSleep(quality: 'well' | 'okay' | 'poorly') {
   localStorage.setItem('concovery_sleep', JSON.stringify(sleepHistory.value))
 }
 
-// 
+//
 // SECTION 5 - SYMPTOM CHECK
 // One question at a time. Yes on any question jumps to result.
-// 
+//
 
 const symptomStep        = ref(0)
 const symptomAnswers     = ref<(boolean | null)[]>([null, null, null])
@@ -540,11 +543,11 @@ function resetSymptoms() {
   symptomAnswers.value = [null, null, null]
 }
 
-// 
+//
 // SECTION 6 - ACTIVITY CHECKLIST
 // Key format: "dayNumber-activityName" e.g. "7-Light jogging"
 // Saved to localStorage under 'concovery_activities'
-// 
+//
 
 const checkedActivities = ref<Record<string, boolean>>({})
 
@@ -572,7 +575,7 @@ function getActivityIcon(activityName: string): string {
   return 'default'
 }
 
-// 
+//
 // SECTION 7 - BREATHING EXERCISE (4-7-8 technique)
 // Three cycles: inhale 4s, hold 7s, exhale 8s
 //
@@ -637,7 +640,7 @@ function stopBreathing() {
 // SECTION 8 - COGNITIVE LOAD TEST (Digit Span)
 // Based on the SCAT5 digit span test. Sequence length increases with recovery.
 // Saved to localStorage under 'concovery_cognitive'
-// 
+//
 
 const cognitivePhase        = ref<'idle' | 'showing' | 'input' | 'result'>('idle')
 const cognitiveSequence     = ref<number[]>([])
@@ -706,11 +709,11 @@ function resetCognitive() {
   cognitiveShowDigit.value = null
 }
 
-// 
+//
 // SECTION 9 - REACTION TIME TEST
 // Five rounds. Green circle appears after 1.5 to 3.5 second random delay.
 // Saved to localStorage under 'concovery_reaction'
-// 
+//
 
 const reactionPhase     = ref<'idle' | 'waiting' | 'ready' | 'result'>('idle')
 const reactionTimes     = ref<number[]>([])
@@ -764,10 +767,10 @@ function getReactionLabel(ms: number) {
   return             { label: 'Still slow, your brain is still recovering. Do not rush your return', color: '#C62828' }
 }
 
-// 
+//
 // SECTION 10 - RECOVERY JOURNAL
 // Saved to localStorage under 'concovery_journal'
-// 
+//
 
 const journalEntry       = ref('')
 const journalEntries     = ref<{ day: number; date: string; text: string }[]>([])
@@ -794,7 +797,7 @@ function saveJournalEntry() {
   setTimeout(() => { journalSaved.value = false }, 2000)
 }
 
-// 
+//
 // SECTION 11 - EXPANDABLE STAGE TIMELINE
 //
 
@@ -813,7 +816,50 @@ function jumpToDay(day: number) {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-// 
+function setupDateSection() {
+  gsap.set('.sr-s1 h2', { opacity: 0, y: 22 })
+  gsap.set('.date-btn-wrap', { opacity: 0, y: 16 })
+  ScrollTrigger.create({
+    trigger: '.sr-s1', start: 'top 82%', once: true,
+    onEnter: () => {
+      gsap.to('.sr-s1 h2',      { opacity: 1, y: 0, duration: 0.75, ease: 'power2.out' })
+      gsap.to('.date-btn-wrap', { opacity: 1, y: 0, duration: 0.75, ease: 'power2.out', delay: 0.15 })
+    }
+  })
+}
+
+async function setupActivitiesGrid() {
+  await nextTick()
+  const grid = document.querySelector('.activities-grid') as HTMLElement | null
+  if (!grid || grid.children.length < 2) return
+  gsap.fromTo(grid.children[0], { opacity: 0, x: -44 }, { opacity: 1, x: 0, duration: 0.85, ease: 'power2.out' })
+  gsap.fromTo(grid.children[1], { opacity: 0, x:  44 }, { opacity: 1, x: 0, duration: 0.85, ease: 'power2.out', delay: 0.16 })
+}
+
+async function setupStageTimeline() {
+  await nextTick()
+  const rows = document.querySelectorAll('.stage-timeline-row')
+  if (!rows.length) return
+  gsap.set(rows, { opacity: 0, y: 20 })
+  ScrollTrigger.create({
+    trigger: '.sr-s4', start: 'top 80%', once: true,
+    onEnter: () => gsap.to(rows, { opacity: 1, y: 0, duration: 0.6, stagger: 0.09, ease: 'power2.out' })
+  })
+}
+
+function setupSupportCta() {
+  gsap.set('.support-cta h2', { opacity: 0, y: 22 })
+  gsap.set('.support-cta a',  { opacity: 0, y: 16 })
+  ScrollTrigger.create({
+    trigger: '.support-cta', start: 'top 82%', once: true,
+    onEnter: () => {
+      gsap.to('.support-cta h2', { opacity: 1, y: 0, duration: 0.75, ease: 'power2.out' })
+      gsap.to('.support-cta a',  { opacity: 1, y: 0, duration: 0.75, ease: 'power2.out', delay: 0.2 })
+    }
+  })
+}
+
+//
 // SECTION 12 - LIFECYCLE HOOKS
 // onMounted: restore saved data, check if returning from exercise page
 // onUnmounted: clear all timers
@@ -850,18 +896,21 @@ onMounted(() => {
     showCheckInModal.value = true
     checkInStep.value = currentStage.value && currentStage.value >= 2 ? 4 : 3
   }
+setupDateSection()
+setupSupportCta()
 })
 
 onUnmounted(() => {
   if (breathingInterval) clearInterval(breathingInterval)
   if (reactionTimeout)   clearTimeout(reactionTimeout)
   if (cognitiveTimeout)  clearTimeout(cognitiveTimeout)
+    ScrollTrigger.getAll().forEach(t => t.kill())
 })
 
 //
 // SECTION 13 - COMPUTED PROPERTIES
 // These update automatically whenever their dependencies change.
-// 
+//
 
 const currentStage = computed(() => {
   if (!daysSinceInjury.value) return null
@@ -934,9 +983,9 @@ const progressLog = computed(() => {
 
 const showProgressLog = ref(false)
 
-// 
+//
 // SECTION 14 - CORE METHODS
-// 
+//
 
 function calculateDays(dateStr: string) {
   const injury   = new Date(dateStr)
@@ -951,6 +1000,13 @@ function calculateDays(dateStr: string) {
 }
 
 watch(injuryDate, (val) => { if (val) calculateDays(val) })
+
+watch(viewingDay, async (newVal, oldVal) => {
+  if (newVal && !oldVal) {
+    await setupActivitiesGrid()
+    await setupStageTimeline()
+  }
+})
 
 function getDayStatus(day: number): 'past' | 'today' | 'future' {
   if (!daysSinceInjury.value) return 'future'
@@ -1023,7 +1079,7 @@ const props = defineProps({
         <div class="max-w-2xl mx-auto text-center">
           <h2 class="sr-heading text-3xl font-bold mb-8">When did you get your concussion?</h2>
 
-          <div class="relative inline-block mb-10">
+          <div class="relative inline-block mb-10 date-btn-wrap">
             <button @click="showCalendar = !showCalendar" class="inline-flex items-center gap-3 border-2 border-[#38bfff] rounded-xl px-6 py-4 bg-white hover:bg-[#F5F8FF] transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#38bfff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
               <span class="sr-heading text-xl font-semibold">{{ injuryDate ? formatDisplayDate(injuryDate) : 'Select a date' }}</span>
@@ -1143,7 +1199,7 @@ const props = defineProps({
         </div>
 
         <!-- MAIN GRID: Activities LEFT, Brain RIGHT -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 activities-grid">
 
           <!-- ACTIVITIES CARD (LEFT / PRIMARY) -->
           <div class="sr-card rounded-2xl p-10 border border-[#EBEBEB] shadow-sm">
@@ -1595,7 +1651,7 @@ const props = defineProps({
         <div class="space-y-3">
           <div
             v-for="stage in stages" :key="stage.id"
-            class="rounded-2xl border-2 overflow-hidden transition-all duration-300"
+            class="rounded-2xl border-2 overflow-hidden transition-all duration-300 stage-timeline-row"
             :class="{ 'border-[#38bfff]': getStageStatus(stage.id) === 'current', 'border-[#1B7C3D]': getStageStatus(stage.id) === 'complete', 'border-[#EBEBEB]': getStageStatus(stage.id) === 'upcoming' }"
           >
             <button
@@ -1773,7 +1829,7 @@ const props = defineProps({
     </section>
 
     <!-- SUPPORT CTA - always dark -->
-    <section style="background:#0A1628;" class="py-20 text-center">
+    <section style="background:#0A1628;" class="py-20 text-center support-cta">
       <div class="max-w-[1200px] mx-auto px-10">
         <h2 class="text-3xl font-bold text-white mb-4">Not sure if you are ready?</h2>
         <p class="text-white/60 mb-8 max-w-lg mx-auto leading-relaxed">Find the nearest GP, sports medicine clinic or hospital for a professional assessment.</p>
@@ -1792,7 +1848,7 @@ const props = defineProps({
 
 
 <style>
-/* 
+/*
    All colours hardcoded - toggle has zero effect.
    Hero and Support CTA stay dark via inline/scoped styles.
  */
@@ -1820,7 +1876,7 @@ const props = defineProps({
 </style>
 
 <style scoped>
-/* 
+/*
    HERO - Bebas Neue, matches home page exactly
 */
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
@@ -1880,7 +1936,7 @@ const props = defineProps({
   to   { transform: translateX(-50%); }
 }
 
-/* 
+/*
    ACTIVITY CARDS - staggered slide-in animation */
 .activity-card {
   opacity: 0;
@@ -1891,7 +1947,7 @@ const props = defineProps({
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* 
+/*
    PAGE & MODAL TRANSITIONS
  */
 .fade-scale-enter-active, .fade-scale-leave-active { transition: opacity 0.4s ease, transform 0.4s ease; }
