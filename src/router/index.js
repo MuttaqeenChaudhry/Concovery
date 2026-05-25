@@ -8,6 +8,9 @@ import StagedRecovery from "@/pages/StagedRecovery.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  scrollBehavior() {
+    return { top: 0, behavior: 'smooth' }
+  },
   routes: [
     {
       path: "/",
