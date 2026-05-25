@@ -932,7 +932,7 @@ onUnmounted(() => {
 
         <div class="text-center mb-12">
           <span class="inline-block bg-[#1A4FAB]/10 text-[#1A4FAB] text-xs font-semibold px-4 py-1.5 rounded-full mb-4 tracking-widest uppercase">10-year trend</span>
-          <h2 class="text-4xl font-bold text-[#1A1A1A] mb-4">This is why the 2021 rules exist.</h2>
+          <h2 class="text-4xl font-bold text-[#1A1A1A] mb-4">This is why the 21-Day rule exists.</h2>
           <p class="text-[#5A7A9B] text-lg max-w-2xl mx-auto">A decade of rising hospitalisations led to a national protocol. Here is what the data looked like on the way there.</p>
         </div>
 
