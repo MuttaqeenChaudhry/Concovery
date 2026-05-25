@@ -430,14 +430,14 @@ async function applyFilters() {
 }
 
 onMounted(async () => {
+  setupStatStrip()
+  setupBeatGrids()
   await fetchDropdowns()
   await fetchSportsData()
   await fetchAgeData()
   await fetchTrendData()
   await fetchComparisonData()
   filtersApplied.value = true
-  setupStatStrip()
-  setupBeatGrids()
 })
 
 onUnmounted(() => {
